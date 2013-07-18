@@ -1,16 +1,18 @@
 package main.java.com.rollbar.android;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import main.java.com.rollbar.android.http.AsyncHttpRequestManager;
-import main.java.com.rollbar.android.http.AsyncHttpResponseHandler;
-import main.java.com.rollbar.android.http.HttpResponse;
-
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.StringEntity;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.util.Log;
+
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 
 public class Notifier {
     private static final String NOTIFIER_VERSION = "0.0.1";
@@ -20,10 +22,14 @@ public class Notifier {
 
     private String accessToken;
     private String environment;
+    
+    private static AsyncHttpClient httpClient;
 
     public Notifier(String accessToken, String environment, HashMap<String, Object> config) {
         this.accessToken = accessToken;
         this.environment = environment;
+        
+        httpClient = new AsyncHttpClient();
 
         configuration = new Configuration();
         configuration.put(Configuration.ENDPOINT, DEFAULT_ENDPOINT);
@@ -83,22 +89,37 @@ public class Notifier {
     }
 
     private void postItem(JSONObject payload) {
-        AsyncHttpRequestManager.getInstance().postJson(configuration.get(Configuration.ENDPOINT) + "item/", payload,
-                new AsyncHttpResponseHandler() {
+        HttpEntity entity;
+        
+        try {
+            entity = new StringEntity(payload.toString());
+        } catch (UnsupportedEncodingException e) {
+            Log.e(Rollbar.TAG, e.toString());
+            return;
+        }
+        
+        httpClient.post(null, configuration.get(Configuration.ENDPOINT) + "item/", entity, 
+                "application/json", new AsyncHttpResponseHandler()  {
+            @Override
+            public void onStart() {
+                Log.i(Rollbar.TAG, "Sending item payload...");
+            }
 
-                    @Override
-                    public void onSuccess(HttpResponse response) {
-                        Log.i(Rollbar.TAG, "Success");
-                    }
+            @Override
+            public void onSuccess(String response) {
+                Log.i(Rollbar.TAG, "Success.");
+            }
+        
+            @Override
+            public void onFailure(Throwable e, String response) {
+                Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar!");
+                Log.e(Rollbar.TAG, "Response: " + response);
+            }
 
-                    @Override
-                    public void onFailure(HttpResponse response) {
-                        Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar");
-                        if (response != null) {
-                            Log.e(Rollbar.TAG, "Response: " + response.getResponseText());
-                        }
-                    }
-                });
+            @Override
+            public void onFinish() {
+            }
+        });
     }
 
     public void uncaughtException(Throwable throwable) {
@@ -148,8 +169,6 @@ public class Notifier {
 
         JSONObject payload = buildPayload(level, new JSONObject(body));
         postItem(payload);
-
-        Log.i(Rollbar.TAG, payload.toString());
     }
 
 }
