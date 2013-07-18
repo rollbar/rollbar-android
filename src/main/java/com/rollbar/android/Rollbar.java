@@ -17,20 +17,20 @@ public class Rollbar {
 		notifier = new Notifier(accessToken, environment, config);
 	}
 	
-	public static void reportException(Exception exception, String level) {
+	public static void reportException(Throwable throwable, String level) {
 		if (notifier == null) {
 			Log.e(TAG, "Rollber not initialized with an access token!");
 		} else {
 			try {
-				notifier.reportException(exception, level);
+				notifier.reportException(throwable, level);
 			} catch (Exception e) {
 				Log.e(TAG, "Exception when trying to report exception to Rollbar: " + e.toString());
 			}
 		}
 	}
 	
-	public static void reportException(Exception exception) {
-		reportException(exception, "error");
+	public static void reportException(Throwable throwable) {
+		reportException(throwable, "error");
 	}
 	
 	public static void reportMessage(String message, String level) {

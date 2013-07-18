@@ -1,11 +1,13 @@
 package main.java.com.rollbar.android;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import main.java.com.rollbar.android.http.AsyncHttpRequestManager;
 import main.java.com.rollbar.android.http.AsyncHttpResponseHandler;
 import main.java.com.rollbar.android.http.HttpResponse;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.util.Log;
@@ -29,6 +31,8 @@ public class Notifier {
 		if (config != null) {
 			configuration.putAll(config);
 		}
+		
+		RollbarExceptionHandler.register(this);
 	}
 	
 	private JSONObject buildNotifierData() {
@@ -96,8 +100,42 @@ public class Notifier {
 		});
 	}
 	
-	public void reportException(Exception exception, String level) {
-		// TODO: report exception
+	public void uncaughtException(Throwable throwable) {
+		reportException(throwable, "error");
+	}
+	
+	public void reportException(Throwable throwable, String level) {
+		HashMap<String, Object> body = new HashMap<String, Object>();
+		HashMap<String, Object> trace = new HashMap<String, Object>();
+		HashMap<String, String> exceptionData = new HashMap<String, String>();
+		
+		ArrayList<JSONObject> frames = new ArrayList<JSONObject>();
+		
+		StackTraceElement[] elements = throwable.getStackTrace();
+		for (int i = elements.length - 1; i >= 0; --i) {
+			StackTraceElement element = elements[i];
+			
+			HashMap<String, Object> frame = new HashMap<String, Object>();
+			
+			frame.put("filename", element.getClassName());
+			frame.put("method", element.getMethodName());
+		
+			if (!element.isNativeMethod()) {
+				frame.put("lineno", element.getLineNumber());
+			}
+			
+			frames.add(new JSONObject(frame));
+		}
+
+		exceptionData.put("class", throwable.getClass().getName());
+		exceptionData.put("message", throwable.getMessage());
+
+		trace.put("frames", new JSONArray(frames));
+		trace.put("exception", new JSONObject(exceptionData));
+		body.put("trace", new JSONObject(trace));
+		
+		JSONObject payload = buildPayload(level, new JSONObject(body));
+		postItem(payload);
 	}
 
 	public void reportMessage(String message, String level) {
