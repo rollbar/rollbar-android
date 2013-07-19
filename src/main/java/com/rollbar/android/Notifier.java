@@ -12,6 +12,9 @@ import org.apache.http.entity.StringEntity;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -21,21 +24,36 @@ public class Notifier {
     private static final String NOTIFIER_VERSION = "0.0.1";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/";
 
-    private Configuration configuration;
+    private RollbarConfiguration configuration;
 
+    private Context context;
     private String accessToken;
     private String environment;
     
+    private int versionCode;
+    private String versionName;
+    
     private static AsyncHttpClient httpClient;
 
-    public Notifier(String accessToken, String environment, HashMap<String, Object> config) {
+    public Notifier(Context context, String accessToken, String environment, HashMap<String, Object> config) {
+        this.context = context;
         this.accessToken = accessToken;
         this.environment = environment;
         
+        try {
+            String packageName = context.getPackageName();
+            PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
+            
+            this.versionCode = info.versionCode;
+            this.versionName = info.versionName;
+        } catch (NameNotFoundException e) {
+            Log.e(Rollbar.TAG, "Error getting package info!");
+        }
+        
         httpClient = new AsyncHttpClient();
 
-        configuration = new Configuration();
-        configuration.put(Configuration.ENDPOINT, DEFAULT_ENDPOINT);
+        configuration = new RollbarConfiguration();
+        configuration.put(RollbarConfiguration.ENDPOINT, DEFAULT_ENDPOINT);
 
         if (config != null) {
             configuration.putAll(config);
@@ -60,6 +78,8 @@ public class Notifier {
         HashMap<String, Object> androidData = new HashMap<String, Object>();
         androidData.put("phone_model", android.os.Build.MODEL);
         androidData.put("android_version", android.os.Build.VERSION.RELEASE);
+        androidData.put("code_version", this.versionCode);
+        androidData.put("version_name", this.versionName);
         client.put("android", new JSONObject(androidData));
 
         return new JSONObject(client);
@@ -101,7 +121,7 @@ public class Notifier {
             return;
         }
         
-        httpClient.post(null, configuration.get(Configuration.ENDPOINT) + "item/", entity, 
+        httpClient.post(null, configuration.get(RollbarConfiguration.ENDPOINT) + "item/", entity, 
                 "application/json", new AsyncHttpResponseHandler()  {
             @Override
             public void onStart() {
@@ -153,20 +173,17 @@ public class Notifier {
             frames.add(new JSONObject(frame));
         }
         
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(baos);
-        
-        throwable.printStackTrace(ps);
-        
-        ps.close();
         try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            PrintStream ps = new PrintStream(baos);
+            
+            throwable.printStackTrace(ps);
+            ps.close();
             baos.close();
-        } catch (IOException e1) {
-        }
-        
-        try {
+            
             trace.put("raw", baos.toString("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
+            Log.e(Rollbar.TAG, "Exception printing stack trace! " + e.toString());
         }
         
         exceptionData.put("class", throwable.getClass().getName());
