@@ -1,5 +1,8 @@
 package main.java.com.rollbar.android;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -139,16 +142,33 @@ public class Notifier {
 
             HashMap<String, Object> frame = new HashMap<String, Object>();
 
-            frame.put("filename", element.getClassName());
+            frame.put("class_name", element.getClassName());
+            frame.put("filename", element.getFileName());
             frame.put("method", element.getMethodName());
 
-            if (!element.isNativeMethod()) {
+            if (element.getLineNumber() > 0) {
                 frame.put("lineno", element.getLineNumber());
             }
 
             frames.add(new JSONObject(frame));
         }
-
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+        
+        throwable.printStackTrace(ps);
+        
+        ps.close();
+        try {
+            baos.close();
+        } catch (IOException e1) {
+        }
+        
+        try {
+            trace.put("raw", baos.toString("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+        }
+        
         exceptionData.put("class", throwable.getClass().getName());
         exceptionData.put("message", throwable.getMessage());
 
