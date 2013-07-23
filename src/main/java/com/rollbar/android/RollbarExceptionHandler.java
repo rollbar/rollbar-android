@@ -1,4 +1,4 @@
-package main.java.com.rollbar.android;
+package com.rollbar.android;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 
