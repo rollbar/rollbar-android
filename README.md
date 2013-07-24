@@ -10,7 +10,7 @@ Download [rollbar-android.jar](https://rollbar.com/rollbar-android.jar) and plac
 Add the following line in your custom Application subclass's `onCreate()` to initialize Rollbar:
 
 ```java
-Rollbar.init(this, "CLIENT_ACCESS_TOKEN", "development");
+Rollbar.init(this, "CLIENT_ACCESS_TOKEN", "production");
 ```
 
 
@@ -57,10 +57,10 @@ Rollbar provides a way for you to upload the `mapping.txt` file generated in the
 
 Here is an example cURL command to upload a `mapping.txt` file:
 
-    curl https://api.rollbar.com/api/1/proguard
-    -F access_token=aaaabbbbccccddddeeeeffff00001111 \
-    -F version=10 \
-    -F mapping=@path/to/mapping.txt
+    curl https://api.rollbar.com/api/1/proguard \
+      -F access_token=aaaabbbbccccddddeeeeffff00001111 \
+      -F version=10 \
+      -F mapping=@path/to/mapping.txt
 
 Where `version` matches the `android:versionCode` in your app's `AndroidManifest.xml`, corresponding to the version the `mapping.txt` was built for.
 
@@ -71,3 +71,17 @@ By default, file names and line numbers are removed by ProGuard. To preserve thi
 ```
 -keepattributes SourceFile,LineNumberTable
 ```
+
+## Help / Support
+
+If you run into any issues, please email us at `support@rollbar.com`
+
+
+## Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
+
