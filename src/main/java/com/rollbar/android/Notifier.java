@@ -24,18 +24,19 @@ public class Notifier {
     private static final String NOTIFIER_VERSION = "0.0.1";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/";
 
-    private RollbarConfiguration configuration;
-
     private Context context;
     private String accessToken;
     private String environment;
     
+    private String endpoint;
+    private boolean reportUncaughtExceptions;
+    
     private int versionCode;
     private String versionName;
     
-    private static AsyncHttpClient httpClient;
+    private AsyncHttpClient httpClient;
 
-    public Notifier(Context context, String accessToken, String environment, HashMap<String, Object> config) {
+    public Notifier(Context context, String accessToken, String environment) {
         this.context = context;
         this.accessToken = accessToken;
         this.environment = environment;
@@ -52,13 +53,8 @@ public class Notifier {
         
         httpClient = new AsyncHttpClient();
 
-        configuration = new RollbarConfiguration();
-        configuration.put(RollbarConfiguration.ENDPOINT, DEFAULT_ENDPOINT);
-
-        if (config != null) {
-            configuration.putAll(config);
-        }
-
+        endpoint = DEFAULT_ENDPOINT;
+        
         RollbarExceptionHandler.register(this);
     }
 
@@ -121,7 +117,7 @@ public class Notifier {
             return;
         }
         
-        httpClient.post(null, configuration.get(RollbarConfiguration.ENDPOINT) + "item/", entity, 
+        httpClient.post(null, this.endpoint + "item/", entity, 
                 "application/json", new AsyncHttpResponseHandler()  {
             @Override
             public void onStart() {
@@ -146,7 +142,9 @@ public class Notifier {
     }
 
     public void uncaughtException(Throwable throwable) {
-        reportException(throwable, "error");
+        if (reportUncaughtExceptions) {
+            reportException(throwable, "error");
+        }
     }
 
     public void reportException(Throwable throwable, String level) {
@@ -206,6 +204,14 @@ public class Notifier {
 
         JSONObject payload = buildPayload(level, new JSONObject(body));
         postItem(payload);
+    }
+
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public void setReportUncaughtExceptions(boolean reportUncaughtExceptions) {
+        this.reportUncaughtExceptions = reportUncaughtExceptions;
     }
 
 }
