@@ -62,7 +62,7 @@ Here is an example cURL command to upload a `mapping.txt` file:
       -F version=10 \
       -F mapping=@path/to/mapping.txt
 
-Where `version` matches the `android:versionCode` in your app's `AndroidManifest.xml`, corresponding to the version the `mapping.txt` was built for.
+Where `version` matches the `android:versionCode` in your app's `AndroidManifest.xml`, corresponding to the version the `mapping.txt` was generated for.
 
 After uploading, any future reported exceptions for the specified version will automatically be deobfuscated using the mapping file.
 

@@ -181,7 +181,7 @@ public class Notifier {
             
             trace.put("raw", baos.toString("UTF-8"));
         } catch (Exception e) {
-            Log.e(Rollbar.TAG, "Exception printing stack trace! " + e.toString());
+            Log.e(Rollbar.TAG, "Exception printing stack trace! ", e);
         }
         
         exceptionData.put("class", throwable.getClass().getName());
