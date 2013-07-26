@@ -1,15 +1,13 @@
 package com.rollbar.android;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.StringEntity;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
@@ -58,31 +56,31 @@ public class Notifier {
         RollbarExceptionHandler.register(this);
     }
 
-    private JSONObject buildNotifierData() {
-        HashMap<String, Object> notifier = new HashMap<String, Object>();
+    private JSONObject buildNotifierData() throws JSONException {
+        JSONObject notifier = new JSONObject();
         notifier.put("name", "rollbar-android");
         notifier.put("version", NOTIFIER_VERSION);
 
-        return new JSONObject(notifier);
+        return notifier;
     }
 
-    private JSONObject buildClientData() {
-        HashMap<String, Object> client = new HashMap<String, Object>();
+    private JSONObject buildClientData() throws JSONException {
+        JSONObject client = new JSONObject();
 
         client.put("timestamp", System.currentTimeMillis() / 1000);
 
-        HashMap<String, Object> androidData = new HashMap<String, Object>();
+        JSONObject androidData = new JSONObject();
         androidData.put("phone_model", android.os.Build.MODEL);
         androidData.put("android_version", android.os.Build.VERSION.RELEASE);
         androidData.put("code_version", this.versionCode);
         androidData.put("version_name", this.versionName);
-        client.put("android", new JSONObject(androidData));
+        client.put("android", androidData);
 
-        return new JSONObject(client);
+        return client;
     }
 
-    private JSONObject buildData(String level, JSONObject body) {
-        HashMap<String, Object> data = new HashMap<String, Object>();
+    private JSONObject buildData(String level, JSONObject body) throws JSONException {
+        JSONObject data = new JSONObject();
 
         data.put("environment", this.environment);
         data.put("level", level);
@@ -95,16 +93,16 @@ public class Notifier {
         data.put("client", buildClientData());
         data.put("notifier", buildNotifierData());
 
-        return new JSONObject(data);
+        return data;
     }
 
-    private JSONObject buildPayload(String level, JSONObject body) {
-        HashMap<String, Object> payload = new HashMap<String, Object>();
+    private JSONObject buildPayload(String level, JSONObject body) throws JSONException {
+        JSONObject payload = new JSONObject();
 
         payload.put("access_token", this.accessToken);
         payload.put("data", buildData(level, body));
 
-        return new JSONObject(payload);
+        return payload;
     }
 
     private void postItem(JSONObject payload) {
@@ -117,11 +115,12 @@ public class Notifier {
             return;
         }
         
+        Log.i(Rollbar.TAG, "Sending item payload...");
+        
         httpClient.post(null, this.endpoint + "item/", entity, 
                 "application/json", new AsyncHttpResponseHandler()  {
             @Override
             public void onStart() {
-                Log.i(Rollbar.TAG, "Sending item payload...");
             }
 
             @Override
@@ -148,62 +147,70 @@ public class Notifier {
     }
 
     public void reportException(Throwable throwable, String level) {
-        HashMap<String, Object> body = new HashMap<String, Object>();
-        HashMap<String, Object> trace = new HashMap<String, Object>();
-        HashMap<String, String> exceptionData = new HashMap<String, String>();
-
-        ArrayList<JSONObject> frames = new ArrayList<JSONObject>();
-
-        StackTraceElement[] elements = throwable.getStackTrace();
-        for (int i = elements.length - 1; i >= 0; --i) {
-            StackTraceElement element = elements[i];
-
-            HashMap<String, Object> frame = new HashMap<String, Object>();
-
-            frame.put("class_name", element.getClassName());
-            frame.put("filename", element.getFileName());
-            frame.put("method", element.getMethodName());
-
-            if (element.getLineNumber() > 0) {
-                frame.put("lineno", element.getLineNumber());
-            }
-
-            frames.add(new JSONObject(frame));
-        }
-        
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            PrintStream ps = new PrintStream(baos);
+            JSONObject body = new JSONObject();
+            JSONObject trace = new JSONObject();
+            JSONObject exceptionData = new JSONObject();
+    
+            JSONArray frames = new JSONArray();
+    
+            StackTraceElement[] elements = throwable.getStackTrace();
+            for (int i = elements.length - 1; i >= 0; --i) {
+                StackTraceElement element = elements[i];
+    
+                JSONObject frame = new JSONObject();
+    
+                frame.put("class_name", element.getClassName());
+                frame.put("filename", element.getFileName());
+                frame.put("method", element.getMethodName());
+    
+                if (element.getLineNumber() > 0) {
+                    frame.put("lineno", element.getLineNumber());
+                }
+    
+                frames.put(frame);
+            }
             
-            throwable.printStackTrace(ps);
-            ps.close();
-            baos.close();
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                PrintStream ps = new PrintStream(baos);
+                
+                throwable.printStackTrace(ps);
+                ps.close();
+                baos.close();
+                
+                trace.put("raw", baos.toString("UTF-8"));
+            } catch (Exception e) {
+                Log.e(Rollbar.TAG, "Exception printing stack trace!", e);
+            }
             
-            trace.put("raw", baos.toString("UTF-8"));
-        } catch (Exception e) {
-            Log.e(Rollbar.TAG, "Exception printing stack trace! ", e);
+            exceptionData.put("class", throwable.getClass().getName());
+            exceptionData.put("message", throwable.getMessage());
+    
+            trace.put("frames", frames);
+            trace.put("exception", exceptionData);
+            body.put("trace", trace);
+    
+            JSONObject payload = buildPayload(level, body);
+            postItem(payload);
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
         }
-        
-        exceptionData.put("class", throwable.getClass().getName());
-        exceptionData.put("message", throwable.getMessage());
-
-        trace.put("frames", new JSONArray(frames));
-        trace.put("exception", new JSONObject(exceptionData));
-        body.put("trace", new JSONObject(trace));
-
-        JSONObject payload = buildPayload(level, new JSONObject(body));
-        postItem(payload);
     }
 
     public void reportMessage(String message, String level) {
-        HashMap<String, Object> body = new HashMap<String, Object>();
-        HashMap<String, String> messageBody = new HashMap<String, String>();
-
-        messageBody.put("body", message);
-        body.put("message", new JSONObject(messageBody));
-
-        JSONObject payload = buildPayload(level, new JSONObject(body));
-        postItem(payload);
+        try {
+            JSONObject body = new JSONObject();
+            JSONObject messageBody = new JSONObject();
+    
+            messageBody.put("body", message);
+            body.put("message", messageBody);
+    
+            JSONObject payload = buildPayload(level, body);
+            postItem(payload);
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
+        }
     }
 
     public void setEndpoint(String endpoint) {
