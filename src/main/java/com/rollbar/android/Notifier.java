@@ -52,6 +52,7 @@ public class Notifier {
         httpClient = new AsyncHttpClient();
 
         endpoint = DEFAULT_ENDPOINT;
+        reportUncaughtExceptions = true;
         
         RollbarExceptionHandler.register(this);
     }
