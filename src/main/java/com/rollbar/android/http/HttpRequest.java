@@ -24,6 +24,8 @@ public class HttpRequest implements Runnable {
 
     private String method;
     private byte[] body;
+    
+    private int attempt;
 
     public HttpRequest(URL url, String method, HttpResponseHandler handler) {
         this.url = url;
@@ -31,6 +33,8 @@ public class HttpRequest implements Runnable {
         this.handler = handler;
 
         this.requestProperties = new HashMap<String, String>();
+        
+        attempt = 1;
     }
 
     public void setMethod(String method) {
@@ -54,7 +58,7 @@ public class HttpRequest implements Runnable {
         try {
             connection = (HttpURLConnection) url.openConnection();
         } catch (IOException e) {
-            handler.onFailure(new HttpResponse(e.toString()));
+            onFailure(new HttpResponse(e.toString()));
             return;
         }
 
@@ -88,13 +92,27 @@ public class HttpRequest implements Runnable {
             if (responseCode == 200) {
                 handler.onSuccess(response);
             } else {
-                handler.onFailure(response);
+                onFailure(response);
             }
         } catch (IOException e) {
-            handler.onFailure(new HttpResponse(e.toString()));
+            onFailure(new HttpResponse(e.toString()));
         } finally {
             connection.disconnect();
         }
+    }
+    
+    private void onFailure(HttpResponse response) {
+        if (attempt < HttpRequestManager.MAX_RETRIES) {
+            attempt++;
+            
+            HttpRequestManager.getInstance().retryRequest(this);
+        } else {
+            handler.onFailure(response);
+        }
+    }
+    
+    public int getAttempt() {
+        return attempt;
     }
 
     private String getResponseText(InputStream in) throws IOException {
