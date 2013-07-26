@@ -5,7 +5,7 @@ Java library for reporting exceptions, errors, and log messages to [Rollbar](htt
 
 ## Setup ##
 
-Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/download/v0.0.1/rollbar-android.jar) and place it in your Android project's `libs` directory.
+Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/download/v0.0.2/rollbar-android.jar) and place it in your Android project's `libs` directory.
 
 Add the following line in your custom Application subclass's `onCreate()` to initialize Rollbar:
 
