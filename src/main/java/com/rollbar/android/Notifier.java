@@ -13,10 +13,12 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.util.Log;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.rollbar.android.http.HttpRequestManager;
+import com.rollbar.android.http.HttpResponse;
+import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
     private static final String NOTIFIER_VERSION = "0.0.2";
@@ -31,8 +33,6 @@ public class Notifier {
     
     private int versionCode;
     private String versionName;
-    
-    private AsyncHttpClient httpClient;
 
     public Notifier(Context context, String accessToken, String environment) {
         this.context = context;
@@ -48,8 +48,6 @@ public class Notifier {
         } catch (NameNotFoundException e) {
             Log.e(Rollbar.TAG, "Error getting package info!");
         }
-        
-        httpClient = new AsyncHttpClient();
 
         endpoint = DEFAULT_ENDPOINT;
         reportUncaughtExceptions = true;
@@ -107,36 +105,20 @@ public class Notifier {
     }
 
     private void postItem(JSONObject payload) {
-        HttpEntity entity;
-        
-        try {
-            entity = new StringEntity(payload.toString());
-        } catch (UnsupportedEncodingException e) {
-            Log.e(Rollbar.TAG, e.toString());
-            return;
-        }
-        
         Log.i(Rollbar.TAG, "Sending item payload...");
         
-        httpClient.post(null, this.endpoint + "item/", entity, 
-                "application/json", new AsyncHttpResponseHandler()  {
+        HttpRequestManager.getInstance().postJson(this.endpoint + "item/", payload,
+            new HttpResponseHandler() {
+            
             @Override
-            public void onStart() {
+            public void onSuccess(HttpResponse response) {
+                Log.i(Rollbar.TAG, "Success");
             }
-
+            
             @Override
-            public void onSuccess(String response) {
-                Log.i(Rollbar.TAG, "Success.");
-            }
-        
-            @Override
-            public void onFailure(Throwable e, String response) {
+            public void onFailure(HttpResponse response) {
                 Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar!");
                 Log.e(Rollbar.TAG, "Response: " + response);
-            }
-
-            @Override
-            public void onFinish() {
             }
         });
     }
