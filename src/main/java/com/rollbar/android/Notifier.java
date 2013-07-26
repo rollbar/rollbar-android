@@ -19,7 +19,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 
 public class Notifier {
-    private static final String NOTIFIER_VERSION = "0.0.1";
+    private static final String NOTIFIER_VERSION = "0.0.2";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/";
 
     private Context context;
