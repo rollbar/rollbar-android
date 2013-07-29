@@ -25,7 +25,7 @@ public class HttpRequest implements Runnable {
     private String method;
     private byte[] body;
     
-    private int attempt;
+    private int attemptNumber;
 
     public HttpRequest(URL url, String method, HttpResponseHandler handler) {
         this.url = url;
@@ -34,7 +34,7 @@ public class HttpRequest implements Runnable {
 
         this.requestProperties = new HashMap<String, String>();
         
-        attempt = 1;
+        attemptNumber = 1;
     }
 
     public void setMethod(String method) {
@@ -58,7 +58,7 @@ public class HttpRequest implements Runnable {
         try {
             connection = (HttpURLConnection) url.openConnection();
         } catch (IOException e) {
-            onFailure(new HttpResponse(e.toString()));
+            handleFailureWithRetries(new HttpResponse(e.toString()));
             return;
         }
 
@@ -92,18 +92,18 @@ public class HttpRequest implements Runnable {
             if (responseCode == 200) {
                 handler.onSuccess(response);
             } else {
-                onFailure(response);
+                handleFailureWithRetries(response);
             }
         } catch (IOException e) {
-            onFailure(new HttpResponse(e.toString()));
+            handleFailureWithRetries(new HttpResponse(e.toString()));
         } finally {
             connection.disconnect();
         }
     }
     
-    private void onFailure(HttpResponse response) {
-        if (attempt < HttpRequestManager.MAX_RETRIES) {
-            attempt++;
+    private void handleFailureWithRetries(HttpResponse response) {
+        if (attemptNumber < HttpRequestManager.MAX_RETRIES) {
+            attemptNumber++;
             
             HttpRequestManager.getInstance().retryRequest(this);
         } else {
@@ -111,8 +111,8 @@ public class HttpRequest implements Runnable {
         }
     }
     
-    public int getAttempt() {
-        return attempt;
+    public int getAttemptNumber() {
+        return attemptNumber;
     }
 
     private String getResponseText(InputStream in) throws IOException {

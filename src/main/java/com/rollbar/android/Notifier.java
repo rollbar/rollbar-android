@@ -1,11 +1,16 @@
 package com.rollbar.android;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.StringEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,7 +18,6 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.Configuration;
 import android.util.Log;
 
 import com.rollbar.android.http.HttpRequestManager;
@@ -23,6 +27,15 @@ import com.rollbar.android.http.HttpResponseHandler;
 public class Notifier {
     private static final String NOTIFIER_VERSION = "0.0.2";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/";
+    private static final String ITEM_DIR_NAME = "rollbar-items";
+    
+    private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
+    
+    private static int itemCounter = 0;
+    
+    volatile private boolean handlerScheduled;
+    
+    private ScheduledExecutorService scheduler;
 
     private Context context;
     private String accessToken;
@@ -33,8 +46,12 @@ public class Notifier {
     
     private int versionCode;
     private String versionName;
+    
+    private File queuedItemDirectory;
 
     public Notifier(Context context, String accessToken, String environment) {
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        
         this.context = context;
         this.accessToken = accessToken;
         this.environment = environment;
@@ -52,7 +69,14 @@ public class Notifier {
         endpoint = DEFAULT_ENDPOINT;
         reportUncaughtExceptions = true;
         
+        handlerScheduled = false;
+        
+        queuedItemDirectory = new File(context.getCacheDir(), ITEM_DIR_NAME);
+        queuedItemDirectory.mkdirs();
+        
         RollbarExceptionHandler.register(this);
+        
+        scheduleItemFileHandler();
     }
 
     private JSONObject buildNotifierData() throws JSONException {
@@ -104,23 +128,118 @@ public class Notifier {
         return payload;
     }
 
-    private void postItem(JSONObject payload) {
+    private JSONObject loadItem(File file) {
+        Log.d(Rollbar.TAG, "Loading item payload...");
+        
+        JSONObject payload = null;
+        
+        try {
+            FileInputStream in = new FileInputStream(file);
+            
+            StringBuffer content = new StringBuffer();
+            
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = in.read(buffer)) != -1) {
+                content.append(new String(buffer));
+            }
+            
+            in.close();
+            
+            payload = new JSONObject(content.toString());
+
+            Log.d(Rollbar.TAG, "Item payload loaded");
+        } catch (FileNotFoundException e) {
+            Log.e(Rollbar.TAG, "Unable to read item file!", e);
+        } catch (IOException e) {
+            Log.e(Rollbar.TAG, "Unable to read item file!", e);
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "Invalid item data! Deleting file.", e);
+            file.delete();
+        }
+        
+        return payload;
+    }
+    
+    private File writeItem(JSONObject payload) {
+        Log.d(Rollbar.TAG, "Writing item payload...");
+        
+        try {
+            String filename = itemCounter++ + "." + System.currentTimeMillis();
+            File file = new File(queuedItemDirectory, filename);
+            FileWriter writer = new FileWriter(file);
+            
+            writer.write(payload.toString());
+            writer.close();
+
+            Log.d(Rollbar.TAG, "Item payload written");
+            return file;
+        } catch (IOException e) {
+            Log.e(Rollbar.TAG, "Unable to write payload!", e);
+            return null;
+        }
+    }
+    
+    private void postItem(JSONObject payload, final File file) {
         Log.i(Rollbar.TAG, "Sending item payload...");
         
         HttpRequestManager.getInstance().postJson(this.endpoint + "item/", payload,
-            new HttpResponseHandler() {
+                new HttpResponseHandler() {
             
             @Override
             public void onSuccess(HttpResponse response) {
                 Log.i(Rollbar.TAG, "Success");
+                
+                if (file != null) {
+                    file.delete();
+                }
             }
             
             @Override
             public void onFailure(HttpResponse response) {
                 Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar!");
                 Log.e(Rollbar.TAG, "Response: " + response);
+
+                if (file != null) {
+                    // Give up if there is a server error
+                    if (response.getStatusCode() == 500) {
+                        file.delete();
+                    }
+                }
             }
         });
+    }
+    
+    private void queueItem(JSONObject payload) {
+        File file = writeItem(payload);
+        
+        postItem(payload, file);
+    }
+    
+    private void scheduleItemFileHandler() {
+        if (!handlerScheduled) {
+            handlerScheduled = true;
+            
+            Log.d(Rollbar.TAG, "Scheheduling item file handler...");
+            
+            scheduler.schedule(new Runnable() {
+                
+                @Override
+                public void run() {
+                    Log.d(Rollbar.TAG, "Item file handler running...");
+                    
+                    File[] files = queuedItemDirectory.listFiles();
+                    
+                    for (File file : files) {
+                        JSONObject payload = loadItem(file);
+                        
+                        postItem(payload, file);
+                    }
+                    
+                    handlerScheduled = false;
+                }
+            }, DEFAULT_ITEM_SCHEDULE_DELAY, TimeUnit.SECONDS);
+        }
     }
 
     public void uncaughtException(Throwable throwable) {
@@ -175,7 +294,7 @@ public class Notifier {
             body.put("trace", trace);
     
             JSONObject payload = buildPayload(level, body);
-            postItem(payload);
+            queueItem(payload);
         } catch (JSONException e) {
             Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
         }
@@ -190,7 +309,7 @@ public class Notifier {
             body.put("message", messageBody);
     
             JSONObject payload = buildPayload(level, body);
-            postItem(payload);
+            queueItem(payload);
         } catch (JSONException e) {
             Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
         }

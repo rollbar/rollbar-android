@@ -49,7 +49,7 @@ public class HttpRequestManager {
     }
     
     public void retryRequest(final HttpRequest request) {
-        int retryDelay = request.getAttempt();
+        int retryDelay = request.getAttemptNumber();
         
         service.schedule(new Runnable() {
             
