@@ -7,6 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class HttpRequestManager {
@@ -27,8 +28,8 @@ public class HttpRequestManager {
         }
         return instance;
     }
-
-    public void postJson(String urlString, JSONObject json, HttpResponseHandler handler) {
+    
+    private void postJson(String urlString, String body, boolean async, HttpResponseHandler handler) {
         URL url;
 
         try {
@@ -43,9 +44,21 @@ public class HttpRequestManager {
         request.setRequestProperty("Content-Type", "application/json");
         request.setRequestProperty("Accept", "application/json");
 
-        request.setBody(json.toString());
+        request.setBody(body);
 
-        executor.execute(request);
+        if (async) {
+            executor.execute(request);
+        } else {
+            request.run();
+        }
+    }
+
+    public void postJson(String urlString, JSONObject json, boolean async, HttpResponseHandler handler) {
+        postJson(urlString, json.toString(), async, handler);
+    }
+
+    public void postJson(String urlString, JSONArray json, boolean async, HttpResponseHandler handler) {
+        postJson(urlString, json.toString(), async, handler);
     }
     
     public void retryRequest(final HttpRequest request) {

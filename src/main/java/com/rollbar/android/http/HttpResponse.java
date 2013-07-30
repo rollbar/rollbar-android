@@ -8,9 +8,12 @@ public class HttpResponse {
     
     public HttpResponse(String result) {
         this.result = result;
+        this.statusCode = 0;
+        this.responseText = null;
     }
 
     public HttpResponse(int statusCode, String responseText) {
+        this.result = null;
         this.statusCode = statusCode;
         this.responseText = responseText;
     }
@@ -21,6 +24,10 @@ public class HttpResponse {
 
     public String getResponseText() {
         return responseText;
+    }
+    
+    public boolean hasStatusCode() {
+        return statusCode > 0;
     }
 
     @Override

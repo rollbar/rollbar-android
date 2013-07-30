@@ -48,6 +48,8 @@ public class Notifier {
     private String versionName;
     
     private File queuedItemDirectory;
+    private RollbarThread rollbarThread;
+    
 
     public Notifier(Context context, String accessToken, String environment) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -75,6 +77,9 @@ public class Notifier {
         queuedItemDirectory.mkdirs();
         
         RollbarExceptionHandler.register(this);
+
+        rollbarThread = new RollbarThread(this);
+        rollbarThread.start();
         
         scheduleItemFileHandler();
     }
@@ -119,19 +124,19 @@ public class Notifier {
         return data;
     }
 
-    private JSONObject buildPayload(String level, JSONObject body) throws JSONException {
+    private JSONObject buildPayload(JSONArray data) throws JSONException {
         JSONObject payload = new JSONObject();
 
         payload.put("access_token", this.accessToken);
-        payload.put("data", buildData(level, body));
+        payload.put("data", data);
 
         return payload;
     }
 
-    private JSONObject loadItem(File file) {
-        Log.d(Rollbar.TAG, "Loading item payload...");
+    private JSONArray loadItems(File file) {
+        Log.d(Rollbar.TAG, "Loading items...");
         
-        JSONObject payload = null;
+        JSONArray items = null;
         
         try {
             FileInputStream in = new FileInputStream(file);
@@ -146,9 +151,9 @@ public class Notifier {
             
             in.close();
             
-            payload = new JSONObject(content.toString());
+            items = new JSONArray(content.toString());
 
-            Log.d(Rollbar.TAG, "Item payload loaded");
+            Log.d(Rollbar.TAG, "Items loaded");
         } catch (FileNotFoundException e) {
             Log.e(Rollbar.TAG, "Unable to read item file!", e);
         } catch (IOException e) {
@@ -158,32 +163,40 @@ public class Notifier {
             file.delete();
         }
         
-        return payload;
+        return items;
     }
     
-    private File writeItem(JSONObject payload) {
-        Log.d(Rollbar.TAG, "Writing item payload...");
+    public File writeItems(JSONArray items) {
+        Log.d(Rollbar.TAG, "Writing items...");
         
         try {
             String filename = itemCounter++ + "." + System.currentTimeMillis();
             File file = new File(queuedItemDirectory, filename);
             FileWriter writer = new FileWriter(file);
             
-            writer.write(payload.toString());
+            writer.write(items.toString());
             writer.close();
 
-            Log.d(Rollbar.TAG, "Item payload written");
+            Log.d(Rollbar.TAG, "Items written");
             return file;
         } catch (IOException e) {
-            Log.e(Rollbar.TAG, "Unable to write payload!", e);
+            Log.e(Rollbar.TAG, "Unable to write items!", e);
             return null;
         }
     }
     
-    private void postItem(JSONObject payload, final File file) {
-        Log.i(Rollbar.TAG, "Sending item payload...");
+    public void postItems(final JSONArray items, final File file) {
+        Log.i(Rollbar.TAG, "Sending item batch...");
         
-        HttpRequestManager.getInstance().postJson(this.endpoint + "item/", payload,
+        JSONObject payload;
+        try {
+            payload = buildPayload(items);
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
+            return;
+        }
+        
+        HttpRequestManager.getInstance().postJson(this.endpoint + "items/", payload, false,
                 new HttpResponseHandler() {
             
             @Override
@@ -200,9 +213,13 @@ public class Notifier {
                 Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar!");
                 Log.e(Rollbar.TAG, "Response: " + response);
 
-                if (file != null) {
+                if (file == null) {
+                    if (!response.hasStatusCode()) {
+                        writeItems(items);
+                    }
+                } else {
                     // Give up if there is a server error
-                    if (response.getStatusCode() == 500) {
+                    if (response.hasStatusCode()) {
                         file.delete();
                     }
                 }
@@ -210,10 +227,8 @@ public class Notifier {
         });
     }
     
-    private void queueItem(JSONObject payload) {
-        File file = writeItem(payload);
-        
-        postItem(payload, file);
+    private void queueItem(JSONObject item) {
+        rollbarThread.queueItem(item);
     }
     
     private void scheduleItemFileHandler() {
@@ -231,9 +246,8 @@ public class Notifier {
                     File[] files = queuedItemDirectory.listFiles();
                     
                     for (File file : files) {
-                        JSONObject payload = loadItem(file);
-                        
-                        postItem(payload, file);
+                        JSONArray items = loadItems(file);
+                        postItems(items, file);
                     }
                     
                     handlerScheduled = false;
@@ -245,6 +259,14 @@ public class Notifier {
     public void uncaughtException(Throwable throwable) {
         if (reportUncaughtExceptions) {
             reportException(throwable, "error");
+            
+            rollbarThread.interrupt();
+            
+            try {
+                rollbarThread.join();
+            } catch (InterruptedException e) {
+                Log.d(Rollbar.TAG, "Couldn't join rollbar thread", e);
+            }
         }
     }
 
@@ -293,8 +315,8 @@ public class Notifier {
             trace.put("exception", exceptionData);
             body.put("trace", trace);
     
-            JSONObject payload = buildPayload(level, body);
-            queueItem(payload);
+            JSONObject data = buildData(level, body);
+            queueItem(data);
         } catch (JSONException e) {
             Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
         }
@@ -308,8 +330,8 @@ public class Notifier {
             messageBody.put("body", message);
             body.put("message", messageBody);
     
-            JSONObject payload = buildPayload(level, body);
-            queueItem(payload);
+            JSONObject data = buildData(level, body);
+            queueItem(data);
         } catch (JSONException e) {
             Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
         }

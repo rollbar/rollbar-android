@@ -102,7 +102,8 @@ public class HttpRequest implements Runnable {
     }
     
     private void handleFailureWithRetries(HttpResponse response) {
-        if (attemptNumber < HttpRequestManager.MAX_RETRIES) {
+        if (attemptNumber < HttpRequestManager.MAX_RETRIES &&
+                !response.hasStatusCode()) {
             attemptNumber++;
             
             HttpRequestManager.getInstance().retryRequest(this);
