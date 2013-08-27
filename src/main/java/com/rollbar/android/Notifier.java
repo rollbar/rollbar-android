@@ -26,7 +26,7 @@ import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
     private static final String NOTIFIER_VERSION = "0.0.2";
-    private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/";
+    private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     
     private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
@@ -65,7 +65,7 @@ public class Notifier {
             this.versionCode = info.versionCode;
             this.versionName = info.versionName;
         } catch (NameNotFoundException e) {
-            Log.e(Rollbar.TAG, "Error getting package info!");
+            Log.e(Rollbar.TAG, "Error getting package info.");
         }
 
         endpoint = DEFAULT_ENDPOINT;
@@ -153,13 +153,13 @@ public class Notifier {
             
             items = new JSONArray(content.toString());
 
-            Log.d(Rollbar.TAG, "Items loaded");
+            Log.d(Rollbar.TAG, "Items loaded.");
         } catch (FileNotFoundException e) {
-            Log.e(Rollbar.TAG, "Unable to read item file!", e);
+            Log.e(Rollbar.TAG, "Unable to read item file.", e);
         } catch (IOException e) {
-            Log.e(Rollbar.TAG, "Unable to read item file!", e);
+            Log.e(Rollbar.TAG, "Unable to read item file.", e);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "Invalid item data! Deleting file.", e);
+            Log.e(Rollbar.TAG, "Invalid item data. Deleting file.", e);
             file.delete();
         }
         
@@ -180,7 +180,7 @@ public class Notifier {
             Log.d(Rollbar.TAG, "Items written");
             return file;
         } catch (IOException e) {
-            Log.e(Rollbar.TAG, "Unable to write items!", e);
+            Log.e(Rollbar.TAG, "Unable to write items.", e);
             return null;
         }
     }
@@ -192,11 +192,11 @@ public class Notifier {
         try {
             payload = buildPayload(items);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
             return;
         }
         
-        HttpRequestManager.getInstance().postJson(this.endpoint + "items/", payload, false,
+        HttpRequestManager.getInstance().postJson(this.endpoint, payload, false,
                 new HttpResponseHandler() {
             
             @Override
@@ -210,7 +210,7 @@ public class Notifier {
             
             @Override
             public void onFailure(HttpResponse response) {
-                Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar!");
+                Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar.");
                 Log.e(Rollbar.TAG, "Response: " + response);
 
                 if (file == null) {
@@ -305,7 +305,7 @@ public class Notifier {
                 
                 trace.put("raw", baos.toString("UTF-8"));
             } catch (Exception e) {
-                Log.e(Rollbar.TAG, "Exception printing stack trace!", e);
+                Log.e(Rollbar.TAG, "Exception printing stack trace.", e);
             }
             
             exceptionData.put("class", throwable.getClass().getName());
@@ -318,7 +318,7 @@ public class Notifier {
             JSONObject data = buildData(level, body);
             queueItem(data);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
         }
     }
 
@@ -333,12 +333,13 @@ public class Notifier {
             JSONObject data = buildData(level, body);
             queueItem(data);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload!", e);
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
         }
     }
 
     public void setEndpoint(String endpoint) {
         this.endpoint = endpoint;
+        
     }
 
     public void setReportUncaughtExceptions(boolean reportUncaughtExceptions) {

@@ -79,13 +79,9 @@ public class HttpRequest implements Runnable {
 
             int responseCode = connection.getResponseCode();
 
-            InputStream in;
-            if (responseCode == 200) {
-                in = new BufferedInputStream(connection.getInputStream());
-            } else {
-                in = new BufferedInputStream(connection.getErrorStream());
-            }
-
+            InputStream in = new BufferedInputStream(
+                    responseCode == 200 ? connection.getInputStream() : connection.getErrorStream());
+            
             String responseText = getResponseText(in);
             HttpResponse response = new HttpResponse(responseCode, responseText);
 
@@ -123,7 +119,7 @@ public class HttpRequest implements Runnable {
         String response = "";
 
         while ((bytesRead = in.read(contents)) != -1) {
-            response += new String(contents, 0, bytesRead);
+            response = response.concat(new String(contents, 0, bytesRead));
         }
 
         return response;

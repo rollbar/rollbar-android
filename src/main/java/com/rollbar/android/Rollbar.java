@@ -9,7 +9,11 @@ public class Rollbar {
     private static Notifier notifier;
 
     public static void init(Context context, String accessToken, String environment) {
-        notifier = new Notifier(context, accessToken, environment);
+        if (notifier == null) {
+            notifier = new Notifier(context, accessToken, environment);
+        } else {
+            Log.w(TAG, "Rollbar.init() called when it was already initialized.");
+        }
     }
 
     public static void reportException(final Throwable throwable, final String level) {

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="rollbar-android" default="build" basedir=".">
-    <property name="version" value="0.0.2"/>
+    <property name="version" value="0.0.3"/>
     
     <target name ="build" description="Build jar file">
 	    <jar destfile="rollbar-android-${version}.jar" basedir="bin/classes">
-	        <zipgroupfileset dir="libs" includes="*.jar"/>
+	        <!-- <zipgroupfileset dir="libs" includes="*.jar"/> -->
 	    </jar>
     </target>
 </project>

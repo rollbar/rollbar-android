@@ -40,7 +40,7 @@ The following configuration methods are available:
 
     Sets the base URL that items will be posted to.
 
-    Default: `https://api.rollbar.com/api/1/`
+    Default: `https://api.rollbar.com/api/1/items/`
 
 
  * **Rollbar.setReportUncaughtExceptions(boolean report)**
