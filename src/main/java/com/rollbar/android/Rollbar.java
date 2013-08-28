@@ -3,13 +3,23 @@ package com.rollbar.android;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 public class Rollbar {
     public static final String TAG = "Rollbar";
 
     private static Notifier notifier;
 
     public static void init(Context context, String accessToken, String environment) {
-        notifier = new Notifier(context, accessToken, environment);
+        init(context, accessToken, environment, null);
+    }
+
+    public static void init(Context context, String accessToken, String environment, JSONObject personData) {
+        notifier = new Notifier(context, accessToken, environment, personData);
+    }
+
+    public static void setPersonData(JSONObject personData) {
+        notifier.setPersonData(personData);
     }
 
     public static void reportException(final Throwable throwable, final String level) {

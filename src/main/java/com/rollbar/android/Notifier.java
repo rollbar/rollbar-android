@@ -34,10 +34,17 @@ public class Notifier {
     private int versionCode;
     private String versionName;
 
+    private JSONObject personData;
+
     public Notifier(Context context, String accessToken, String environment) {
+        this(context, accessToken, environment, null);
+    }
+
+    public Notifier(Context context, String accessToken, String environment, JSONObject personData) {
         this.context = context;
         this.accessToken = accessToken;
         this.environment = environment;
+        this.personData = personData;
         
         try {
             String packageName = context.getPackageName();
@@ -53,6 +60,10 @@ public class Notifier {
         reportUncaughtExceptions = true;
         
         RollbarExceptionHandler.register(this);
+    }
+
+    public void setPersonData(JSONObject personData) {
+      this.personData = personData;
     }
 
     private JSONObject buildNotifierData() throws JSONException {
@@ -89,6 +100,9 @@ public class Notifier {
 
         data.put("body", body);
 
+        if (personData != null) {
+            data.put("person", personData);
+        }
         data.put("client", buildClientData());
         data.put("notifier", buildNotifierData());
 
