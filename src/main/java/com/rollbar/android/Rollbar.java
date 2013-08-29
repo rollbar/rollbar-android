@@ -3,6 +3,8 @@ package com.rollbar.android;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 public class Rollbar {
     public static final String TAG = "Rollbar";
 
@@ -54,6 +56,14 @@ public class Rollbar {
                 notifier.setReportUncaughtExceptions(report);
             }
         });
+    }
+    
+    public static void setPersonData(JSONObject personData) {
+        notifier.setPersonData(personData);
+    }
+    
+    public static void setPersonData(String id, String username, String email) {
+        notifier.setPersonData(id, username, email);
     }
     
     private static void ensureInit(Runnable runnable) {

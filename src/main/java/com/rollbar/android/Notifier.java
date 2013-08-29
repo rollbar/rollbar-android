@@ -40,6 +40,8 @@ public class Notifier {
     private Context context;
     private String accessToken;
     private String environment;
+
+    private JSONObject personData;
     
     private String endpoint;
     private boolean reportUncaughtExceptions;
@@ -84,6 +86,29 @@ public class Notifier {
         scheduleItemFileHandler();
     }
 
+    public void setPersonData(JSONObject personData) {
+        this.personData = personData;
+    }
+
+    public void setPersonData(String id, String username, String email) {
+        JSONObject personData = new JSONObject();
+        
+        try {
+            personData.put("id", id);
+            
+            if (username != null) {
+                personData.put("username", username);
+            }
+            if (email != null) {
+                personData.put("email", email);
+            }
+            
+            this.personData = personData;
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "JSON error creating person data.", e);
+        }
+    }
+
     private JSONObject buildNotifierData() throws JSONException {
         JSONObject notifier = new JSONObject();
         notifier.put("name", "rollbar-android");
@@ -118,6 +143,9 @@ public class Notifier {
 
         data.put("body", body);
 
+        if (personData != null) {
+            data.put("person", personData);
+        }
         data.put("client", buildClientData());
         data.put("notifier", buildNotifierData());
 
