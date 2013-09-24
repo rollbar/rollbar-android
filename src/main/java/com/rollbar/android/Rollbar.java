@@ -27,7 +27,7 @@ public class Rollbar {
     }
 
     public static void reportException(Throwable throwable) {
-        reportException(throwable, "error");
+        reportException(throwable, null);
     }
 
     public static void reportMessage(final String message, final String level) {
@@ -39,7 +39,23 @@ public class Rollbar {
     }
 
     public static void reportMessage(String message) {
-        reportMessage(message, "error");
+        reportMessage(message, "info");
+    }
+    
+    public static void setPersonData(final JSONObject personData) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setPersonData(personData);
+            }
+        });
+    }
+    
+    public static void setPersonData(final String id, final String username, final String email) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setPersonData(id, username, email);
+            }
+        });
     }
     
     public static void setEndpoint(final String endpoint) {
@@ -58,12 +74,28 @@ public class Rollbar {
         });
     }
     
-    public static void setPersonData(JSONObject personData) {
-        notifier.setPersonData(personData);
+    public static void setIncludeLogcat(final boolean includeLogcat) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setIncludeLogcat(includeLogcat);
+            }
+        });
     }
     
-    public static void setPersonData(String id, String username, String email) {
-        notifier.setPersonData(id, username, email);
+    public static void setDefaultCaughtExceptionLevel(final String level) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setDefaultCaughtExceptionLevel(level);
+            }
+        });
+    }
+    
+    public static void setUncaughtExceptionLevel(final String level) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setUncaughtExceptionLevel(level);
+            }
+        });
     }
     
     private static void ensureInit(Runnable runnable) {

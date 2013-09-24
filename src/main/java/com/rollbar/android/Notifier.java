@@ -1,12 +1,16 @@
 package com.rollbar.android;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,11 +29,12 @@ import com.rollbar.android.http.HttpResponse;
 import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
-    private static final String NOTIFIER_VERSION = "0.0.3";
+    private static final String NOTIFIER_VERSION = "0.0.4";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     
     private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
+    private static final int MAX_LOGCAT_SIZE = 100;
     
     private static int itemCounter = 0;
     
@@ -42,9 +47,11 @@ public class Notifier {
     private String environment;
 
     private JSONObject personData;
-    
     private String endpoint;
     private boolean reportUncaughtExceptions;
+    private boolean includeLogcat;
+    private String defaultCaughtExceptionLevel;
+    private String uncaughtExceptionLevel;
     
     private int versionCode;
     private String versionName;
@@ -70,8 +77,11 @@ public class Notifier {
             Log.e(Rollbar.TAG, "Error getting package info.");
         }
 
+        
         endpoint = DEFAULT_ENDPOINT;
         reportUncaughtExceptions = true;
+        defaultCaughtExceptionLevel = "warning";
+        uncaughtExceptionLevel = "error";
         
         handlerScheduled = false;
         
@@ -85,28 +95,37 @@ public class Notifier {
         
         scheduleItemFileHandler();
     }
-
-    public void setPersonData(JSONObject personData) {
-        this.personData = personData;
-    }
-
-    public void setPersonData(String id, String username, String email) {
-        JSONObject personData = new JSONObject();
+    
+    private JSONArray getLogcatInfo() {
+        JSONArray log = null;
+        
+        int pid = android.os.Process.myPid();
         
         try {
-            personData.put("id", id);
+            Process process = Runtime.getRuntime().exec("logcat -d");
             
-            if (username != null) {
-                personData.put("username", username);
-            }
-            if (email != null) {
-                personData.put("email", email);
+            InputStreamReader isr = new InputStreamReader(process.getInputStream());
+            BufferedReader br = new BufferedReader(isr, 8192);
+            
+            List<String> lines = new ArrayList<String>();
+            
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Only include the line if the current process's pid is present
+                if (line.contains(String.valueOf(pid))) {
+                    lines.add(line);
+                    if (lines.size() > MAX_LOGCAT_SIZE) {
+                        lines.remove(0);
+                    }
+                }
             }
             
-            this.personData = personData;
-        } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "JSON error creating person data.", e);
+            log = new JSONArray(lines);
+        } catch (IOException e) {
+            Log.e(Rollbar.TAG, "Unable to collect logcat info.", e);
         }
+        
+        return log;
     }
 
     private JSONObject buildNotifierData() throws JSONException {
@@ -121,12 +140,18 @@ public class Notifier {
         JSONObject client = new JSONObject();
 
         client.put("timestamp", System.currentTimeMillis() / 1000);
+        
 
         JSONObject androidData = new JSONObject();
         androidData.put("phone_model", android.os.Build.MODEL);
         androidData.put("android_version", android.os.Build.VERSION.RELEASE);
         androidData.put("code_version", this.versionCode);
         androidData.put("version_name", this.versionName);
+
+        if (includeLogcat) {
+            androidData.put("logs", getLogcatInfo());
+        }
+        
         client.put("android", androidData);
 
         return client;
@@ -172,8 +197,7 @@ public class Notifier {
             StringBuffer content = new StringBuffer();
             
             byte[] buffer = new byte[1024];
-            int length;
-            while ((length = in.read(buffer)) != -1) {
+            while (in.read(buffer) != -1) {
                 content.append(new String(buffer));
             }
             
@@ -286,7 +310,7 @@ public class Notifier {
 
     public void uncaughtException(Throwable throwable) {
         if (reportUncaughtExceptions) {
-            reportException(throwable, "error");
+            reportException(throwable, uncaughtExceptionLevel);
             
             rollbarThread.interrupt();
             
@@ -342,6 +366,10 @@ public class Notifier {
             trace.put("frames", frames);
             trace.put("exception", exceptionData);
             body.put("trace", trace);
+            
+            if (level == null) {
+                level = defaultCaughtExceptionLevel;
+            }
     
             JSONObject data = buildData(level, body);
             queueItem(data);
@@ -365,13 +393,47 @@ public class Notifier {
         }
     }
 
+    public void setPersonData(JSONObject personData) {
+        this.personData = personData;
+    }
+
+    public void setPersonData(String id, String username, String email) {
+        JSONObject personData = new JSONObject();
+        
+        try {
+            personData.put("id", id);
+            
+            if (username != null) {
+                personData.put("username", username);
+            }
+            if (email != null) {
+                personData.put("email", email);
+            }
+            
+            this.personData = personData;
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "JSON error creating person data.", e);
+        }
+    }
+
     public void setEndpoint(String endpoint) {
         this.endpoint = endpoint;
-        
     }
 
     public void setReportUncaughtExceptions(boolean reportUncaughtExceptions) {
         this.reportUncaughtExceptions = reportUncaughtExceptions;
+    }
+    
+    public void setIncludeLogcat(boolean includeLogcat) {
+        this.includeLogcat = includeLogcat;
+    }
+
+    public void setDefaultCaughtExceptionLevel(String level) {
+        this.defaultCaughtExceptionLevel = level;
+    }
+
+    public void setUncaughtExceptionLevel(String level) {
+        this.uncaughtExceptionLevel = level;
     }
 
 }

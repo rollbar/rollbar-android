@@ -5,7 +5,7 @@ Java library for reporting exceptions, errors, and log messages to [Rollbar](htt
 
 ## Setup ##
 
-Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/download/v0.0.2/rollbar-android-0.0.2.jar) and place it in your Android project's `libs` directory.
+Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/download/v0.0.4/rollbar-android-0.0.4.jar) and place it in your Android project's `libs` directory.
 
 Add the following line in your custom Application subclass's `onCreate()` to initialize Rollbar:
 
@@ -36,18 +36,48 @@ Rollbar.reportMessage("A test message", "debug");
 
 The following configuration methods are available:
 
+ * **Rollbar.setPersonData(String id, String username, String email)**
+    
+    Sets the properties of the current user (called a "person" in Rollbar parlance) to be sent along with every report.
+    
+    Default: all `null`
+
+
  * **Rollbar.setEndpoint(String endpoint)**
 
-    Sets the base URL that items will be posted to.
+    Sets the endpoint URL that items will be posted to.
 
     Default: `https://api.rollbar.com/api/1/items/`
 
 
  * **Rollbar.setReportUncaughtExceptions(boolean report)**
 
-    Sets whether uncaught exceptions are reported to Rollbar or not.
+    Sets whether or not to report uncaught exceptions to Rollbar.
     
     Default: `true`
+
+
+ * **Rollbar.setIncludeLogcat(boolean includeLogcat)**
+
+    Sets whether or not to include logcat output in reports to Rollbar.
+    
+    Note: For devices with API level 15 and lower, you will need to include the `android.permission.READ_LOGS` permission in your app's `AndroidManifest.xml` for logcat collection to work.
+    
+    Default: `false`
+
+
+ * **Rollbar.setDefaultCaughtExceptionLevel(String level)**
+
+    Sets the level caught exceptions are reported as by default.
+    
+    Default: `warning`
+
+
+ * **Rollbar.setUncaughtExceptionLevel(String level)**
+
+    Sets the level uncaught exceptions are reported as.
+    
+    Default: `error`
 
 ## Deobfuscation ##
 
