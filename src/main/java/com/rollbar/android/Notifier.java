@@ -153,6 +153,7 @@ public class Notifier {
         }
         
         client.put("android", androidData);
+        client.put("user_ip", "$remote_ip");
 
         return client;
     }
