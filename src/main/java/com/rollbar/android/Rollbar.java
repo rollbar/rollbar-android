@@ -97,6 +97,14 @@ public class Rollbar {
             }
         });
     }
+
+    public void setSendOnUncaughtException(final boolean send) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setSendOnUncaughtException(send);
+            }
+        });
+    }
     
     private static void ensureInit(Runnable runnable) {
         if (notifier == null) {

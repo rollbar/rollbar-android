@@ -29,7 +29,7 @@ import com.rollbar.android.http.HttpResponse;
 import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
-    private static final String NOTIFIER_VERSION = "0.0.4";
+    private static final String NOTIFIER_VERSION = "0.0.5";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     
@@ -52,6 +52,7 @@ public class Notifier {
     private boolean includeLogcat;
     private String defaultCaughtExceptionLevel;
     private String uncaughtExceptionLevel;
+    private boolean sendOnUncaughtException;
     
     private int versionCode;
     private String versionName;
@@ -82,6 +83,7 @@ public class Notifier {
         reportUncaughtExceptions = true;
         defaultCaughtExceptionLevel = "warning";
         uncaughtExceptionLevel = "error";
+        sendOnUncaughtException = false;
         
         handlerScheduled = false;
         
@@ -195,7 +197,7 @@ public class Notifier {
         try {
             FileInputStream in = new FileInputStream(file);
             
-            StringBuffer content = new StringBuffer();
+            StringBuilder content = new StringBuilder();
             
             byte[] buffer = new byte[1024];
             while (in.read(buffer) != -1) {
@@ -280,10 +282,6 @@ public class Notifier {
         });
     }
     
-    private void queueItem(JSONObject item) {
-        rollbarThread.queueItem(item);
-    }
-    
     private void scheduleItemFileHandler() {
         if (!handlerScheduled) {
             handlerScheduled = true;
@@ -304,18 +302,79 @@ public class Notifier {
                     }
                     
                     handlerScheduled = false;
+                    Log.d(Rollbar.TAG, "Item file handler finished.");
                 }
             }, DEFAULT_ITEM_SCHEDULE_DELAY, TimeUnit.SECONDS);
         }
     }
 
+    private JSONObject createTrace(Throwable throwable) throws JSONException {
+        JSONObject trace = new JSONObject();
+
+        JSONArray frames = new JSONArray();
+
+        StackTraceElement[] elements = throwable.getStackTrace();
+        for (int i = elements.length - 1; i >= 0; --i) {
+            StackTraceElement element = elements[i];
+
+            JSONObject frame = new JSONObject();
+
+            frame.put("class_name", element.getClassName());
+            frame.put("filename", element.getFileName());
+            frame.put("method", element.getMethodName());
+
+            if (element.getLineNumber() > 0) {
+                frame.put("lineno", element.getLineNumber());
+            }
+
+            frames.put(frame);
+        }
+
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            PrintStream ps = new PrintStream(baos);
+
+            throwable.printStackTrace(ps);
+            ps.close();
+            baos.close();
+
+            trace.put("raw", baos.toString("UTF-8"));
+        } catch (Exception e) {
+            Log.e(Rollbar.TAG, "Exception printing stack trace.", e);
+        }
+
+        JSONObject exceptionData = new JSONObject();
+        exceptionData.put("class", throwable.getClass().getName());
+        exceptionData.put("message", throwable.getMessage());
+
+        trace.put("frames", frames);
+        trace.put("exception", exceptionData);
+
+        return trace;
+    }
+
     public void uncaughtException(Throwable throwable) {
         if (reportUncaughtExceptions) {
-            reportException(throwable, uncaughtExceptionLevel);
-            
+            Log.d(Rollbar.TAG, "Handling uncaught exception...");
+
+            // Finish rollbar thread
             rollbarThread.interrupt();
-            
+
+            JSONObject item = buildItemPayload(throwable, uncaughtExceptionLevel);
+
+            if (item != null) {
+                JSONArray items = new JSONArray();
+                items.put(item);
+
+                if (sendOnUncaughtException) {
+                    postItems(items, null);
+                } else {
+                    writeItems(items);
+                }
+            }
+
             try {
+                // Try finishing up any items currently being sent
                 rollbarThread.join();
             } catch (InterruptedException e) {
                 Log.d(Rollbar.TAG, "Couldn't join rollbar thread", e);
@@ -323,74 +382,57 @@ public class Notifier {
         }
     }
 
-    public void reportException(Throwable throwable, String level) {
+    private JSONObject buildItemPayload(Throwable throwable, String level) {
         try {
             JSONObject body = new JSONObject();
-            JSONObject trace = new JSONObject();
-            JSONObject exceptionData = new JSONObject();
-    
-            JSONArray frames = new JSONArray();
-    
-            StackTraceElement[] elements = throwable.getStackTrace();
-            for (int i = elements.length - 1; i >= 0; --i) {
-                StackTraceElement element = elements[i];
-    
-                JSONObject frame = new JSONObject();
-    
-                frame.put("class_name", element.getClassName());
-                frame.put("filename", element.getFileName());
-                frame.put("method", element.getMethodName());
-    
-                if (element.getLineNumber() > 0) {
-                    frame.put("lineno", element.getLineNumber());
-                }
-    
-                frames.put(frame);
-            }
-            
-            try {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                PrintStream ps = new PrintStream(baos);
-                
-                throwable.printStackTrace(ps);
-                ps.close();
-                baos.close();
-                
-                trace.put("raw", baos.toString("UTF-8"));
-            } catch (Exception e) {
-                Log.e(Rollbar.TAG, "Exception printing stack trace.", e);
-            }
-            
-            exceptionData.put("class", throwable.getClass().getName());
-            exceptionData.put("message", throwable.getMessage());
-    
-            trace.put("frames", frames);
-            trace.put("exception", exceptionData);
-            body.put("trace", trace);
-            
+
+            List<JSONObject> traces = new ArrayList<JSONObject>();
+            do {
+                traces.add(0, createTrace(throwable));
+                throwable = throwable.getCause();
+            } while (throwable != null);
+
+            body.put("trace_chain", new JSONArray(traces));
+
             if (level == null) {
                 level = defaultCaughtExceptionLevel;
             }
-    
-            JSONObject data = buildData(level, body);
-            queueItem(data);
+
+            return buildData(level, body);
         } catch (JSONException e) {
             Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+            return null;
+        }
+    }
+
+    private JSONObject buildItemPayload(String message, String level) {
+        try {
+            JSONObject body = new JSONObject();
+            JSONObject messageBody = new JSONObject();
+
+            messageBody.put("body", message);
+            body.put("message", messageBody);
+
+            return buildData(level, body);
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+            return null;
+        }
+    }
+
+    public void reportException(Throwable throwable, String level) {
+        JSONObject item = buildItemPayload(throwable, level);
+
+        if (item != null) {
+            rollbarThread.queueItem(item);
         }
     }
 
     public void reportMessage(String message, String level) {
-        try {
-            JSONObject body = new JSONObject();
-            JSONObject messageBody = new JSONObject();
-    
-            messageBody.put("body", message);
-            body.put("message", messageBody);
-    
-            JSONObject data = buildData(level, body);
-            queueItem(data);
-        } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+        JSONObject item = buildItemPayload(message, level);
+
+        if (item != null) {
+            rollbarThread.queueItem(item);
         }
     }
 
@@ -437,4 +479,7 @@ public class Notifier {
         this.uncaughtExceptionLevel = level;
     }
 
+    public void setSendOnUncaughtException(boolean sendOnUncaughtException) {
+        this.sendOnUncaughtException = sendOnUncaughtException;
+    }
 }

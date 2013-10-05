@@ -1,15 +1,17 @@
 package com.rollbar.android;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class RollbarThread extends Thread {
-    private ArrayList<JSONObject> queue;
+    private List<JSONObject> queue;
     private Notifier notifier;
     
     private final Lock lock = new ReentrantLock();
@@ -29,10 +31,10 @@ public class RollbarThread extends Thread {
                 if (queue.isEmpty()) {
                     ready.await();
                 }
-                
+
                 JSONArray items = new JSONArray(queue);
                 queue.clear();
-                
+
                 lock.unlock();
 
                 notifier.postItems(items, null);
@@ -42,15 +44,15 @@ public class RollbarThread extends Thread {
                     queue.clear();
 
                     // Save all remaining items to disk because the process is
-                    // most likely dying soon
+                    // dying soon
                     notifier.writeItems(items);
                 }
-                return;
-            } finally {
-                // Unlock if locked
-                try { lock.unlock(); } catch (Exception e) {}
+
+                break;
             }
         }
+
+        Log.d(Rollbar.TAG, "Rollbar thread finishing.");
     }
     
     public void queueItem(JSONObject item) {

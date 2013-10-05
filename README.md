@@ -5,7 +5,7 @@ Java library for reporting exceptions, errors, and log messages to [Rollbar](htt
 
 ## Setup ##
 
-Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/download/v0.0.4/rollbar-android-0.0.4.jar) and place it in your Android project's `libs` directory.
+Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/download/v0.0.5/rollbar-android-0.0.5.jar) and place it in your Android project's `libs` directory.
 
 Add the following line in your custom Application subclass's `onCreate()` to initialize Rollbar:
 
@@ -47,7 +47,7 @@ The following configuration methods are available:
 
     Sets the endpoint URL that items will be posted to.
 
-    Default: `https://api.rollbar.com/api/1/items/`
+    Default: `"https://api.rollbar.com/api/1/items/"`
 
 
  * **Rollbar.setReportUncaughtExceptions(boolean report)**
@@ -70,14 +70,21 @@ The following configuration methods are available:
 
     Sets the level caught exceptions are reported as by default.
     
-    Default: `warning`
+    Default: `"warning"`
 
 
  * **Rollbar.setUncaughtExceptionLevel(String level)**
 
     Sets the level uncaught exceptions are reported as.
     
-    Default: `error`
+    Default: `"error"`
+
+
+ * **Rollbar.setSendOnUncaughtException(boolean send)**
+
+    If true, uncaught exceptions will immediately be sent to Rollbar, blocking the process shutdown sequence. If false, the exception will just be saved to disk so that it can be sent next time the process starts.
+
+    Default: `false`
 
 ## Deobfuscation ##
 

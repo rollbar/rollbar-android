@@ -16,6 +16,9 @@ import android.util.Log;
 import com.rollbar.android.Rollbar;
 
 public class HttpRequest implements Runnable {
+    private static final int REQUEST_TIMEOUT = 5000;
+
+
     private URL url;
     private HttpResponseHandler handler;
 
@@ -64,6 +67,8 @@ public class HttpRequest implements Runnable {
 
         try {
             connection.setRequestMethod(this.method);
+            connection.setConnectTimeout(REQUEST_TIMEOUT);
+            connection.setReadTimeout(REQUEST_TIMEOUT);
 
             for (Entry<String, String> pair : requestProperties.entrySet()) {
                 connection.setRequestProperty(pair.getKey(), pair.getValue());

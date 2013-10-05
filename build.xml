@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="rollbar-android" default="build" basedir=".">
-    <property name="version" value="0.0.4"/>
+    <property name="version" value="0.0.5"/>
     
     <target name ="build" description="Build jar file">
 	    <jar destfile="rollbar-android-${version}.jar" basedir="bin/classes">
