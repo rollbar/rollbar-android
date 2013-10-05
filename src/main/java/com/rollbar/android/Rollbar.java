@@ -98,7 +98,7 @@ public class Rollbar {
         });
     }
 
-    public void setSendOnUncaughtException(final boolean send) {
+    public static void setSendOnUncaughtException(final boolean send) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.setSendOnUncaughtException(send);
