@@ -1,6 +1,6 @@
-Rollbar notifier for Android
-============================
+# Rollbar for Android
 
+<!-- RemoveNext -->
 Java library for reporting exceptions, errors, and log messages to [Rollbar](https://rollbar.com).
 
 ## Setup ##
@@ -10,7 +10,7 @@ Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releas
 Add the following line in your custom Application subclass's `onCreate()` to initialize Rollbar:
 
 ```java
-Rollbar.init(this, "CLIENT_ACCESS_TOKEN", "production");
+Rollbar.init(this, "POST_CLIENT_ITEM_ACCESS_TOKEN", "production");
 ```
 
 
