@@ -94,10 +94,12 @@ Rollbar provides a way for you to upload the `mapping.txt` file generated in the
 
 Here is an example cURL command to upload a `mapping.txt` file:
 
-    curl https://api.rollbar.com/api/1/proguard \
-      -F access_token=aaaabbbbccccddddeeeeffff00001111 \
-      -F version=10 \
-      -F mapping=@path/to/mapping.txt
+```bash
+curl 'https://api.rollbar.com/api/1/proguard' \
+  -F access_token=POST_SERVER_ITEM_ACCESS_TOKEN \
+  -F version=10 \
+  -F mapping=@path/to/mapping.txt
+```
 
 Where `version` matches the `android:versionCode` in your app's `AndroidManifest.xml`, corresponding to the version the `mapping.txt` was generated for.
 
