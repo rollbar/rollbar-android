@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.rollbar.android.http.HttpRequestManager;
@@ -308,7 +309,7 @@ public class Notifier {
         }
     }
 
-    private JSONObject createTrace(Throwable throwable) throws JSONException {
+    private JSONObject createTrace(Throwable throwable, String description) throws JSONException {
         JSONObject trace = new JSONObject();
 
         JSONArray frames = new JSONArray();
@@ -347,6 +348,10 @@ public class Notifier {
         exceptionData.put("class", throwable.getClass().getName());
         exceptionData.put("message", throwable.getMessage());
 
+        if (!TextUtils.isEmpty(description)) {
+        	exceptionData.put("description", description);
+        }            
+        
         trace.put("frames", frames);
         trace.put("exception", exceptionData);
 
@@ -360,7 +365,7 @@ public class Notifier {
             // Finish rollbar thread
             rollbarThread.interrupt();
 
-            JSONObject item = buildItemPayload(throwable, uncaughtExceptionLevel);
+            JSONObject item = buildItemPayload(throwable, uncaughtExceptionLevel, null);
 
             if (item != null) {
                 JSONArray items = new JSONArray();
@@ -382,13 +387,13 @@ public class Notifier {
         }
     }
 
-    private JSONObject buildItemPayload(Throwable throwable, String level) {
+    private JSONObject buildItemPayload(Throwable throwable, String level, String description) {
         try {
             JSONObject body = new JSONObject();
 
             List<JSONObject> traces = new ArrayList<JSONObject>();
             do {
-                traces.add(0, createTrace(throwable));
+                traces.add(0, createTrace(throwable, description));
                 throwable = throwable.getCause();
             } while (throwable != null);
 
@@ -420,8 +425,16 @@ public class Notifier {
         }
     }
 
+    public void reportException(Throwable throwable, String level, String description) {
+        JSONObject item = buildItemPayload(throwable, level, description);
+        
+        if (item != null) {
+            rollbarThread.queueItem(item);
+        }
+    }
+    
     public void reportException(Throwable throwable, String level) {
-        JSONObject item = buildItemPayload(throwable, level);
+        JSONObject item = buildItemPayload(throwable, level, null);
 
         if (item != null) {
             rollbarThread.queueItem(item);
