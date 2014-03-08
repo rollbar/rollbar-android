@@ -27,15 +27,11 @@ public class Rollbar {
     }
     
     public static void reportException(final Throwable throwable, final String level) {
-        ensureInit(new Runnable() {
-            public void run() {
-                notifier.reportException(throwable, level);
-            }
-        });
+        reportException(throwable, level, null);
     }
 
     public static void reportException(Throwable throwable) {
-        reportException(throwable, null);
+        reportException(throwable, null, null);
     }
 
     public static void reportMessage(final String message, final String level) {

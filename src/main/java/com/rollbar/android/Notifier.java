@@ -432,14 +432,6 @@ public class Notifier {
             rollbarThread.queueItem(item);
         }
     }
-    
-    public void reportException(Throwable throwable, String level) {
-        JSONObject item = buildItemPayload(throwable, level, null);
-
-        if (item != null) {
-            rollbarThread.queueItem(item);
-        }
-    }
 
     public void reportMessage(String message, String level) {
         JSONObject item = buildItemPayload(message, level);
