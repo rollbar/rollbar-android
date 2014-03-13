@@ -28,6 +28,7 @@ Rollbar.reportException(new Exception("Test exception")); // default level is "w
 try {
     amount = Integer.parseInt(data);
 } except (NumberFormatException e) {
+    // Providing a description for this exception
     Rollbar.reportException(e, "critical", "Unexpected data from server");
 }
 ```
