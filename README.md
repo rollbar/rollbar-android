@@ -23,13 +23,19 @@ By default the notifier will report all uncaught exceptions to Rollbar.
 To report caught exceptions, call `reportException()`:
 
 ```java
-Rollbar.reportException(new Exception("Test exception"));
+Rollbar.reportException(new Exception("Test exception")); // default level is "warning"
+
+try {
+    amount = Integer.parseInt(data);
+} except (NumberFormatException e) {
+    Rollbar.reportException(e, "critical", "Unexpected data from server");
+}
 ```
 
 To report your own messages, call `reportMessage()`:
 
 ```java
-Rollbar.reportMessage("A test message", "debug");
+Rollbar.reportMessage("A test message", "debug"); // default level is "info"
 ```
 
 ## Configuration reference ##
