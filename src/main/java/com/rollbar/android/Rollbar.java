@@ -11,10 +11,10 @@ public class Rollbar {
     private static Notifier notifier;
 
     public static void init(Context context, String accessToken, String environment) {
-        if (notifier == null) {
-            notifier = new Notifier(context, accessToken, environment);
-        } else {
+        if (isInit()) {
             Log.w(TAG, "Rollbar.init() called when it was already initialized.");
+        } else {
+            notifier = new Notifier(context, accessToken, environment);
         }
     }
 
@@ -24,6 +24,10 @@ public class Rollbar {
                 notifier.reportException(throwable, level, description);
             }
         });
+    }
+
+    public static boolean isInit() {
+        return notifier != null;
     }
     
     public static void reportException(final Throwable throwable, final String level) {
@@ -111,14 +115,14 @@ public class Rollbar {
     }
     
     private static void ensureInit(Runnable runnable) {
-        if (notifier == null) {
-            Log.e(TAG, "Rollbar not initialized with an access token!");
-        } else {
+        if (isInit()) {
             try {
                 runnable.run();
             } catch (Exception e) {
                 Log.e(TAG, "Exception when interacting with Rollbar", e);
             }
+        } else {
+            Log.e(TAG, "Rollbar not initialized with an access token!");
         }
     }
 }
