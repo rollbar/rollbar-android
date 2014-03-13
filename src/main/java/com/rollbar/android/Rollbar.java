@@ -18,16 +18,16 @@ public class Rollbar {
         }
     }
 
+    public static boolean isInit() {
+        return notifier != null;
+    }
+
     public static void reportException(final Throwable throwable, final String level, final String description) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.reportException(throwable, level, description);
             }
         });
-    }
-
-    public static boolean isInit() {
-        return notifier != null;
     }
     
     public static void reportException(final Throwable throwable, final String level) {
