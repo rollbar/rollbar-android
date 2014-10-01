@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -425,6 +426,20 @@ public class Notifier {
         }
     }
 
+    private JSONObject buildItemPayload(String level, Map<String, String> params) {
+        try {
+            JSONObject body = new JSONObject();
+            JSONObject messageBody = new JSONObject();
+            for(String key : params.keySet()){
+                body.put(key, params.get(key));
+            }
+            return buildData(level, body);
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+            return null;
+        }
+    }
+
     public void reportException(Throwable throwable, String level, String description) {
         JSONObject item = buildItemPayload(throwable, level, description);
         
@@ -435,6 +450,14 @@ public class Notifier {
 
     public void reportMessage(String message, String level) {
         JSONObject item = buildItemPayload(message, level);
+
+        if (item != null) {
+            rollbarThread.queueItem(item);
+        }
+    }
+
+    public void reportMessage(String level, Map<String, String> params) {
+        JSONObject item = buildItemPayload(level, params);
 
         if (item != null) {
             rollbarThread.queueItem(item);

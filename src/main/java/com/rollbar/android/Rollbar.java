@@ -5,6 +5,8 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.util.Map;
+
 public class Rollbar {
     public static final String TAG = "Rollbar";
 
@@ -42,6 +44,14 @@ public class Rollbar {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.reportMessage(message, level);
+            }
+        });
+    }
+
+    public static void reportMessage(final String level, final Map<String, String> params) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.reportMessage(level, params);
             }
         });
     }
