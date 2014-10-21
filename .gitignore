@@ -20,3 +20,6 @@ local.properties
 .project
 
 .DS_store
+
+# Ant files
+build/
