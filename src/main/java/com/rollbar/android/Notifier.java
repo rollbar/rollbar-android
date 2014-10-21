@@ -148,7 +148,11 @@ public class Notifier {
         JSONObject androidData = new JSONObject();
         androidData.put("phone_model", android.os.Build.MODEL);
         androidData.put("android_version", android.os.Build.VERSION.RELEASE);
-        androidData.put("code_version", this.versionCode);
+        // NOTE use versionName instead of versionCode in order to fix
+        //      'Resolving Rollbar Items in Versions' feature https://rollbar.com/blog/post/2013/09/17/resolving-rollbar-items-in-versions
+        androidData.put("code_version", this.versionName);
+        // NOTE keep original versionCode value with different name
+        androidData.put("version_code", this.versionCode);
         androidData.put("version_name", this.versionName);
 
         if (includeLogcat) {

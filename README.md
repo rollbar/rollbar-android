@@ -122,6 +122,11 @@ By default, file names and line numbers are removed by ProGuard. To preserve thi
 
 If you run into any issues, please email us at `support@rollbar.com`
 
+## Build
+
+1. Define property `sdk.dir` which contains path to Android SDK inside `local.properties`
+2. Make sure you have installed platform specified in `project.properties`
+3. Run `ant` from command line
 
 ## Contributing
 
@@ -130,4 +135,3 @@ If you run into any issues, please email us at `support@rollbar.com`
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
-
