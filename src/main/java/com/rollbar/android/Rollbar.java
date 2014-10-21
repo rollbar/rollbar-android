@@ -48,10 +48,10 @@ public class Rollbar {
         });
     }
 
-    public static void reportMessage(final String level, final Map<String, String> params) {
+    public static void reportMessage(final String message, final String level, final Map<String, String> params) {
         ensureInit(new Runnable() {
             public void run() {
-                notifier.reportMessage(level, params);
+                notifier.reportMessage(message, level, params);
             }
         });
     }

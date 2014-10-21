@@ -2,10 +2,13 @@
 
 <project name="rollbar-android" default="build" basedir=".">
     <property name="version" value="0.0.6"/>
-    
+
     <target name ="build" description="Build jar file">
-	    <jar destfile="rollbar-android-${version}.jar" basedir="bin/classes">
-	        <!-- <zipgroupfileset dir="libs" includes="*.jar"/> -->
+        <mkdir dir="bin/classes" />
+        <jar destfile="rollbar-android-${version}.jar" basedir="bin/classes" />
+	    <jar destfile="rollbar-android-${version}-dev.jar">
+            <fileset dir="bin/classes" />
+            <fileset dir="src/main/java" includes="**/*.java" />
 	    </jar>
     </target>
 </project>

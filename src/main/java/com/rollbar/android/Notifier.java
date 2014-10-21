@@ -44,7 +44,6 @@ public class Notifier {
     
     private ScheduledExecutorService scheduler;
 
-    private Context context;
     private String accessToken;
     private String environment;
 
@@ -66,7 +65,6 @@ public class Notifier {
     public Notifier(Context context, String accessToken, String environment) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
         
-        this.context = context;
         this.accessToken = accessToken;
         this.environment = environment;
         
@@ -426,12 +424,16 @@ public class Notifier {
         }
     }
 
-    private JSONObject buildItemPayload(String level, Map<String, String> params) {
+    private JSONObject buildItemPayload(String message, String level, Map<String, String> params) {
         try {
             JSONObject body = new JSONObject();
             JSONObject messageBody = new JSONObject();
+            
+            messageBody.put("body", message);
+            body.put("message", messageBody);
+            
             for(String key : params.keySet()){
-                body.put(key, params.get(key));
+                messageBody.put(key, params.get(key));
             }
             return buildData(level, body);
         } catch (JSONException e) {
@@ -456,8 +458,8 @@ public class Notifier {
         }
     }
 
-    public void reportMessage(String level, Map<String, String> params) {
-        JSONObject item = buildItemPayload(level, params);
+    public void reportMessage(String message, String level, Map<String, String> params) {
+        JSONObject item = buildItemPayload(message, level, params);
 
         if (item != null) {
             rollbarThread.queueItem(item);
