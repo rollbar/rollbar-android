@@ -5,7 +5,7 @@ Java library for reporting exceptions, errors, and log messages to [Rollbar](htt
 
 ## Setup ##
 
-Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/download/v0.0.6/rollbar-android-0.0.6.jar) and place it in your Android project's `libs` directory.
+Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/latest) and place it in your Android project's `libs` directory.
 
 Add the following line in your custom Application subclass's `onCreate()` to initialize Rollbar:
 
@@ -104,11 +104,11 @@ Here is an example cURL command to upload a `mapping.txt` file:
 ```bash
 curl 'https://api.rollbar.com/api/1/proguard' \
   -F access_token=POST_SERVER_ITEM_ACCESS_TOKEN \
-  -F version=10 \
+  -F version=0.0.10 \
   -F mapping=@path/to/mapping.txt
 ```
 
-Where `version` matches the `android:versionCode` in your app's `AndroidManifest.xml`, corresponding to the version the `mapping.txt` was generated for.
+Where `version` matches the `android:versionName` in your app's `AndroidManifest.xml`, corresponding to the version the `mapping.txt` was generated for.
 
 After uploading, any future reported exceptions for the specified version will automatically be deobfuscated using the mapping file.
 
@@ -125,7 +125,8 @@ If you run into any issues, please email us at `support@rollbar.com`
 ## Build
 
 1. Define property `sdk.dir` which contains path to Android SDK inside `local.properties`
-2. Make sure you have installed platform specified in `project.properties`
+2. Make sure you have installed the platform specified in `project.properties`
+  - E.g. `sdk.dir = /Users/coryvirok/Development/adt-bundle-mac-x86_64-20140702/sdk/`
 3. Run `ant` from command line
 
 ## Contributing
