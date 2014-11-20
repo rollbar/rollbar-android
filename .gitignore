@@ -19,7 +19,11 @@ local.properties
 .settings
 
 # Eclipse project files
+.settings/
 .classpath
 .project
 
 .DS_store
+
+# Ant files
+build/

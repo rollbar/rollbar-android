@@ -1,14 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<project name="rollbar-android" default="clean-build" basedir=".">
+    <property name="version" value="0.1.1"/>
 
-<project name="rollbar-android" default="build" basedir=".">
-    <property name="version" value="0.0.6"/>
+    <!-- NOTE target property used from this file -->
+    <loadproperties srcFile="project.properties"/>
 
-    <target name ="build" description="Build jar file">
-        <mkdir dir="bin/classes" />
-        <jar destfile="rollbar-android-${version}.jar" basedir="bin/classes" />
+    <!-- NOTE sdk.dir property must be declared in this file -->
+    <loadproperties srcFile="local.properties"/>
+
+    <property name="build.sysclasspath" value="last"/>
+    <property name="android.jar" value="${sdk.dir}/platforms/${target}/android.jar"/>
+
+    <target name="check-android-jar">
+        <available file="${android.jar}" property="android.jar.exists"/>
+        <fail message="Could not locate android.jar: '${android.jar}'${line.separator}Make sure you define 'sdk.dir' in local.properties and have corresponding platform installed" unless="android.jar.exists"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="build"/>
+    </target>
+
+    <target name="compile" depends="check-android-jar">
+        <mkdir dir="build/classes"/>
+        <javac srcdir="src" destdir="build/classes" classpath="${android.jar}"/>
+    </target>
+
+    <target name="jar">
+        <mkdir dir="build/jar"/>
+        <jar destfile="build/jar/rollbar-android-${version}.jar" basedir="build/classes">
+            <!-- <zipgroupfileset dir="libs" includes="*.jar"/> -->
+        </jar>
 	    <jar destfile="rollbar-android-${version}-dev.jar">
             <fileset dir="bin/classes" />
             <fileset dir="src/main/java" includes="**/*.java" />
 	    </jar>
     </target>
+
+    <target name="build" depends="compile,jar"/>
+
+    <target name="clean-build" depends="clean,build"/>
 </project>
