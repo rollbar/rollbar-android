@@ -1,5 +1,8 @@
 # Change Log
 
+**0.1.1**
+- Added reportMessage(message, level, params) to send extra params with messages. (pr#10)
+
 **0.1.0**
 - Fixed build.xml, changed `code_version` parameter (pr#11)
 - `code_version` now properly refers to the [versionName](http://developer.android.com/reference/android/content/pm/PackageInfo.html#versionName) attribute from the manifest file.
