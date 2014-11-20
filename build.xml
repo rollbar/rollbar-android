@@ -30,7 +30,7 @@
         <jar destfile="build/jar/rollbar-android-${version}.jar" basedir="build/classes">
             <!-- <zipgroupfileset dir="libs" includes="*.jar"/> -->
         </jar>
-	    <jar destfile="rollbar-android-${version}-dev.jar">
+        <jar destfile="build/jar/rollbar-android-${version}-dev.jar">
             <fileset dir="bin/classes" />
             <fileset dir="src/main/java" includes="**/*.java" />
 	    </jar>
