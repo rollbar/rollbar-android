@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="rollbar-android" default="clean-build" basedir=".">
-    <property name="version" value="0.1.0"/>
+    <property name="version" value="0.1.1"/>
 
     <!-- NOTE target property used from this file -->
     <loadproperties srcFile="project.properties"/>
@@ -30,6 +30,10 @@
         <jar destfile="build/jar/rollbar-android-${version}.jar" basedir="build/classes">
             <!-- <zipgroupfileset dir="libs" includes="*.jar"/> -->
         </jar>
+	    <jar destfile="rollbar-android-${version}-dev.jar">
+            <fileset dir="bin/classes" />
+            <fileset dir="src/main/java" includes="**/*.java" />
+	    </jar>
     </target>
 
     <target name="build" depends="compile,jar"/>
