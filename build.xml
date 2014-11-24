@@ -22,7 +22,7 @@
 
     <target name="compile" depends="check-android-jar">
         <mkdir dir="build/classes"/>
-        <javac srcdir="src" destdir="build/classes" classpath="${android.jar}"/>
+        <javac source="1.6" target="1.6" srcdir="src" destdir="build/classes" classpath="${android.jar}"/>
     </target>
 
     <target name="jar">
