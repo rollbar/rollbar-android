@@ -31,7 +31,7 @@ import com.rollbar.android.http.HttpResponse;
 import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
-    private static final String NOTIFIER_VERSION = "0.0.6";
+    private static final String NOTIFIER_VERSION = "0.1.2";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     
