@@ -50,13 +50,6 @@ The following configuration methods are available:
     Default: all `null`
 
 
- * **Rollbar.setEndpoint(String endpoint)**
-
-    Sets the endpoint URL that items will be posted to.
-
-    Default: `"https://api.rollbar.com/api/1/items/"`
-
-
  * **Rollbar.setReportUncaughtExceptions(boolean report)**
 
     Sets whether or not to report uncaught exceptions to Rollbar.
@@ -92,6 +85,15 @@ The following configuration methods are available:
     If true, uncaught exceptions will immediately be sent to Rollbar, blocking the process shutdown sequence. If false, the exception will just be saved to disk so that it can be sent next time the process starts.
 
     Default: `false`
+
+
+ * **Rollbar.setEndpoint(String endpoint)**
+
+    If you are using Rollbar Enterprise, call `setEndpoint` to route events to your Rollbar instance. (Most users will not need to do this.)
+
+    Default: `"https://api.rollbar.com/api/1/items/"`
+
+
 
 ## Deobfuscation ##
 
