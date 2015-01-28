@@ -62,7 +62,7 @@ public class Notifier {
     private RollbarThread rollbarThread;
     
 
-    public Notifier(Context context, String accessToken, String environment) {
+    public Notifier(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
         
         this.accessToken = accessToken;
@@ -89,8 +89,10 @@ public class Notifier {
         
         queuedItemDirectory = new File(context.getCacheDir(), ITEM_DIR_NAME);
         queuedItemDirectory.mkdirs();
-        
-        RollbarExceptionHandler.register(this);
+
+        if (registerExceptionHandler) {
+            RollbarExceptionHandler.register(this);
+        }
 
         rollbarThread = new RollbarThread(this);
         rollbarThread.start();
@@ -102,7 +104,7 @@ public class Notifier {
         JSONArray log = null;
         
         int pid = android.os.Process.myPid();
-        
+
         try {
             Process process = Runtime.getRuntime().exec("logcat -d");
             
