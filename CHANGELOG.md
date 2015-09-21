@@ -1,5 +1,8 @@
 # Change Log
 
+**0.1.3**
+- Add pom.xml with metadata for Maven Central
+
 **0.1.2**
 - Added flag to `Rollbar.init()` to enable/disable the registration of the uncaught exception handler. (pr#17)
 
