@@ -3,8 +3,8 @@ package com.rollbar.android;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 public class RollbarExceptionHandler implements UncaughtExceptionHandler {
-    private UncaughtExceptionHandler existingHandler;
-    private Notifier notifier;
+    private final UncaughtExceptionHandler existingHandler;
+    private final Notifier notifier;
 
     private RollbarExceptionHandler(UncaughtExceptionHandler existingHandler, Notifier notifier) {
         this.existingHandler = existingHandler;

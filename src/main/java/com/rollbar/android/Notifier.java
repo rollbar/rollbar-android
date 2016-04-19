@@ -34,6 +34,10 @@ public class Notifier {
     private static final String NOTIFIER_VERSION = "0.1.2";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
+    private static final String PAYLOAD_ERROR_MSG = "There was an error constructing the JSON payload.";
+    private static final String ANDROID = "android";
+    private static final String MESSAGE = "message";
+    
     
     private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
     private static final int MAX_LOGCAT_SIZE = 100;
@@ -42,10 +46,10 @@ public class Notifier {
     
     volatile private boolean handlerScheduled;
     
-    private ScheduledExecutorService scheduler;
+    private final ScheduledExecutorService scheduler;
 
-    private String accessToken;
-    private String environment;
+    private final String accessToken;
+    private final String environment;
 
     private JSONObject personData;
     private String endpoint;
@@ -58,8 +62,8 @@ public class Notifier {
     private int versionCode;
     private String versionName;
     
-    private File queuedItemDirectory;
-    private RollbarThread rollbarThread;
+    private final File queuedItemDirectory;
+    private final RollbarThread rollbarThread;
     
 
     public Notifier(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
@@ -160,7 +164,7 @@ public class Notifier {
             androidData.put("logs", getLogcatInfo());
         }
         
-        client.put("android", androidData);
+        client.put(ANDROID, androidData);
         client.put("user_ip", "$remote_ip");
 
         return client;
@@ -171,8 +175,8 @@ public class Notifier {
 
         data.put("environment", this.environment);
         data.put("level", level);
-        data.put("platform", "android");
-        data.put("framework", "android");
+        data.put("platform", ANDROID);
+        data.put("framework", ANDROID);
         data.put("language", "java");
 
         data.put("body", body);
@@ -253,7 +257,7 @@ public class Notifier {
         try {
             payload = buildPayload(items);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+            Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
             return;
         }
         
@@ -351,7 +355,7 @@ public class Notifier {
 
         JSONObject exceptionData = new JSONObject();
         exceptionData.put("class", throwable.getClass().getName());
-        exceptionData.put("message", throwable.getMessage());
+        exceptionData.put(MESSAGE, throwable.getMessage());
 
         if (!TextUtils.isEmpty(description)) {
         	exceptionData.put("description", description);
@@ -410,7 +414,7 @@ public class Notifier {
 
             return buildData(level, body);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+            Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
             return null;
         }
     }
@@ -421,11 +425,11 @@ public class Notifier {
             JSONObject messageBody = new JSONObject();
 
             messageBody.put("body", message);
-            body.put("message", messageBody);
+            body.put(MESSAGE, messageBody);
 
             return buildData(level, body);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+            Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
             return null;
         }
     }
@@ -436,14 +440,14 @@ public class Notifier {
             JSONObject messageBody = new JSONObject();
             
             messageBody.put("body", message);
-            body.put("message", messageBody);
+            body.put(MESSAGE, messageBody);
             
-            for(String key : params.keySet()){
-                messageBody.put(key, params.get(key));
+            for(Map.Entry<String, String> stringEntry : params.entrySet()){
+                messageBody.put(stringEntry.getKey(), stringEntry.getValue());
             }
             return buildData(level, body);
         } catch (JSONException e) {
-            Log.e(Rollbar.TAG, "There was an error constructing the JSON payload.", e);
+            Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
             return null;
         }
     }

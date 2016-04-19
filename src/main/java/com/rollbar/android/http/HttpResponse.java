@@ -1,10 +1,10 @@
 package com.rollbar.android.http;
 
 public class HttpResponse {
-    private String result;
+    private final String result;
     
-    private int statusCode;
-    private String responseText;
+    private final int statusCode;
+    private final String responseText;
     
     public HttpResponse(String result) {
         this.result = result;

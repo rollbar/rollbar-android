@@ -19,11 +19,11 @@ public class HttpRequest implements Runnable {
     private static final int REQUEST_TIMEOUT = 5000;
 
 
-    private URL url;
-    private HttpResponseHandler handler;
+    private final URL url;
+    private final HttpResponseHandler handler;
 
     private HttpURLConnection connection;
-    private HashMap<String, String> requestProperties;
+    private final HashMap<String, String> requestProperties;
 
     private String method;
     private byte[] body;
@@ -120,7 +120,7 @@ public class HttpRequest implements Runnable {
     private String getResponseText(InputStream in) throws IOException {
         byte[] contents = new byte[1024];
 
-        int bytesRead = 0;
+        int bytesRead;
         String response = "";
 
         while ((bytesRead = in.read(contents)) != -1) {
