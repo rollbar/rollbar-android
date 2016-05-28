@@ -11,8 +11,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class RollbarThread extends Thread {
-    private List<JSONObject> queue;
-    private Notifier notifier;
+    private final List<JSONObject> queue;
+    private final Notifier notifier;
     
     private final Lock lock = new ReentrantLock();
     private final Condition ready = lock.newCondition();

@@ -14,8 +14,8 @@ public class HttpRequestManager {
     public static final int MAX_RETRIES = 5;
     
     private static HttpRequestManager instance = null;
-    private ThreadPoolExecutor executor;
-    private ScheduledExecutorService service;
+    private final ThreadPoolExecutor executor;
+    private final ScheduledExecutorService service;
 
     private HttpRequestManager() {
         executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
