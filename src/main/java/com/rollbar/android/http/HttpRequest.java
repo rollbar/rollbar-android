@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -124,7 +125,7 @@ public class HttpRequest implements Runnable {
         String response = "";
 
         while ((bytesRead = in.read(contents)) != -1) {
-            response = response.concat(new String(contents, 0, bytesRead));
+            response = response.concat(new String(contents, 0, bytesRead, StandardCharsets.UTF_8));
         }
 
         return response;

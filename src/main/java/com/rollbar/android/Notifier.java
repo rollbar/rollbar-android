@@ -5,10 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +114,7 @@ public class Notifier {
         try {
             Process process = Runtime.getRuntime().exec("logcat -d");
             
-            InputStreamReader isr = new InputStreamReader(process.getInputStream());
+            InputStreamReader isr = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8);
             BufferedReader br = new BufferedReader(isr, 8192);
             
             List<String> lines = new ArrayList<String>();
@@ -211,7 +213,7 @@ public class Notifier {
             
             byte[] buffer = new byte[1024];
             while (in.read(buffer) != -1) {
-                content.append(new String(buffer));
+                content.append(new String(buffer, StandardCharsets.UTF_8));
             }
             
             in.close();
@@ -237,8 +239,9 @@ public class Notifier {
         try {
             String filename = itemCounter++ + "." + System.currentTimeMillis();
             File file = new File(queuedItemDirectory, filename);
-            FileWriter writer = new FileWriter(file);
-            
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
+
             writer.write(items.toString());
             writer.close();
 
@@ -342,7 +345,7 @@ public class Notifier {
 
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            PrintStream ps = new PrintStream(baos);
+            PrintStream ps = new PrintStream(baos, false, "UTF-8");
 
             throwable.printStackTrace(ps);
             ps.close();
