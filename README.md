@@ -14,9 +14,15 @@ Install from Maven central:
   <dependency>
     <groupId>com.rollbar</groupId>
      <artifactId>rollbar</artifactId>
-     <version>0.5.0</version>
+     <version>0.1.3</version>
   </dependency>
 </dependencies>
+```
+
+or
+
+```
+compile 'com.rollbar:rollbar-android:0.1.3'
 ```
 
 ### Jar
