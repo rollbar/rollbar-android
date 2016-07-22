@@ -35,6 +35,13 @@ public class Rollbar {
             }
         });
     }
+
+    public static void reportException(final Throwable throwable, final String level, final String description, final Map<String, String> params) {
+        ensureInit(new Runnable() {
+                public void run() {
+                notifier.reportException(throwable, level, description, params);
+            }
+        });
     
     public static void reportException(final Throwable throwable, final String level) {
         reportException(throwable, level, null);

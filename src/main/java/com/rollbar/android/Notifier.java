@@ -419,6 +419,33 @@ public class Notifier {
         }
     }
 
+    private JSONObject buildItemPayload(Throwable throwable, String level, String description, Map<String, String> params) {
+        try {
+            JSONObject body = new JSONObject();
+
+            List<JSONObject> traces = new ArrayList<JSONObject>();
+            do {
+                traces.add(0, createTrace(throwable, description));
+                throwable = throwable.getCause();
+            } while (throwable != null);
+
+            body.put("trace_chain", new JSONArray(traces));
+
+            if (level == null) {
+                level = defaultCaughtExceptionLevel;
+            }
+
+            for(Map.Entry<String, String> stringEntry : params.entrySet()){
+                body.put(stringEntry.getKey(), stringEntry.getValue());
+            }
+
+            return buildData(level, body);
+        } catch (JSONException e) {
+            Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
+            return null;
+        }
+    }
+
     private JSONObject buildItemPayload(String message, String level) {
         try {
             JSONObject body = new JSONObject();
@@ -455,6 +482,14 @@ public class Notifier {
     public void reportException(Throwable throwable, String level, String description) {
         JSONObject item = buildItemPayload(throwable, level, description);
         
+        if (item != null) {
+            rollbarThread.queueItem(item);
+        }
+    }
+
+    public void reportException(Throwable throwable, String level, String description, Map<String, String> params) {
+        JSONObject item = buildItemPayload(throwable, level, description, params);
+
         if (item != null) {
             rollbarThread.queueItem(item);
         }
