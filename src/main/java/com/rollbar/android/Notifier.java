@@ -400,13 +400,9 @@ public class Notifier {
         try {
             JSONObject body = new JSONObject();
 
-            List<JSONObject> traces = new ArrayList<JSONObject>();
-            do {
-                traces.add(0, createTrace(throwable, description));
-                throwable = throwable.getCause();
-            } while (throwable != null);
+            JSONArray jsonArray = makeTrace(throwable, description);
 
-            body.put("trace_chain", new JSONArray(traces));
+            body.put("trace_chain", jsonArray);
 
             if (level == null) {
                 level = defaultCaughtExceptionLevel;
@@ -423,13 +419,9 @@ public class Notifier {
         try {
             JSONObject body = new JSONObject();
 
-            List<JSONObject> traces = new ArrayList<JSONObject>();
-            do {
-                traces.add(0, createTrace(throwable, description));
-                throwable = throwable.getCause();
-            } while (throwable != null);
+            JSONArray jsonArray = makeTrace(throwable, description);
 
-            body.put("trace_chain", new JSONArray(traces));
+            body.put("trace_chain", jsonArray);
 
             if (level == null) {
                 level = defaultCaughtExceptionLevel;
@@ -444,6 +436,15 @@ public class Notifier {
             Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
             return null;
         }
+    }
+
+    private JSONArray makeTrace(Throwable throwable, String description) throws JSONException {
+        List<JSONObject> traces = new ArrayList<JSONObject>();
+        do {
+            traces.add(0, createTrace(throwable, description));
+            throwable = throwable.getCause();
+        } while (throwable != null);
+        return new JSONArray(traces);
     }
 
     private JSONObject buildItemPayload(String message, String level) {
