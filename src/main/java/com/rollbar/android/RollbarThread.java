@@ -16,15 +16,19 @@ public class RollbarThread extends Thread {
     
     private final Lock lock = new ReentrantLock();
     private final Condition ready = lock.newCondition();
-    
+    private final String DEFAULT_ROLLBAR_THREAD_NAME = "RollbarThread";
+
     public RollbarThread(Notifier notifier) {
         this.notifier = notifier;
         queue = new ArrayList<JSONObject>();
+        setName(notifier.rollbarThreadName !=null
+                ? notifier.rollbarThreadName
+                : DEFAULT_ROLLBAR_THREAD_NAME);
     }
 
     @Override
     public void run() {
-        for (;;) {
+        for (; ; ) {
             lock.lock();
             
             try {

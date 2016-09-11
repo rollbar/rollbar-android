@@ -13,14 +13,18 @@ public class Rollbar {
     private static Notifier notifier;
 
     public static void init(Context context, String accessToken, String environment) {
-        init(context, accessToken, environment, true);
+        init(context, null, accessToken, environment, true);
     }
 
     public static void init(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
+        init(context, null, accessToken, environment, registerExceptionHandler);
+    }
+
+    public static void init(Context context, String rollbarThreadName, String accessToken, String environment, boolean registerExceptionHandler) {
         if (isInit()) {
             Log.w(TAG, "Rollbar.init() called when it was already initialized.");
         } else {
-            notifier = new Notifier(context, accessToken, environment, registerExceptionHandler);
+            notifier = new Notifier(context, rollbarThreadName, accessToken, environment, registerExceptionHandler);
         }
     }
 
@@ -35,7 +39,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void reportException(final Throwable throwable, final String level) {
         reportException(throwable, level, null);
     }
@@ -63,7 +67,7 @@ public class Rollbar {
     public static void reportMessage(String message) {
         reportMessage(message, "info");
     }
-    
+
     public static void setPersonData(final JSONObject personData) {
         ensureInit(new Runnable() {
             public void run() {
@@ -71,7 +75,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setPersonData(final String id, final String username, final String email) {
         ensureInit(new Runnable() {
             public void run() {
@@ -79,7 +83,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setEndpoint(final String endpoint) {
         ensureInit(new Runnable() {
             public void run() {
@@ -87,7 +91,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setReportUncaughtExceptions(final boolean report) {
         ensureInit(new Runnable() {
             public void run() {
@@ -95,7 +99,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setIncludeLogcat(final boolean includeLogcat) {
         ensureInit(new Runnable() {
             public void run() {
@@ -103,7 +107,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setDefaultCaughtExceptionLevel(final String level) {
         ensureInit(new Runnable() {
             public void run() {
@@ -111,7 +115,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setUncaughtExceptionLevel(final String level) {
         ensureInit(new Runnable() {
             public void run() {
@@ -127,7 +131,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     private static void ensureInit(Runnable runnable) {
         if (isInit()) {
             try {
