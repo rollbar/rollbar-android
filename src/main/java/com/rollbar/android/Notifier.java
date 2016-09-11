@@ -43,13 +43,14 @@ public class Notifier {
     private static final int MAX_LOGCAT_SIZE = 100;
     
     private static int itemCounter = 0;
-    
+
     volatile private boolean handlerScheduled;
     
     private final ScheduledExecutorService scheduler;
 
     private final String accessToken;
     private final String environment;
+    protected final String rollbarThreadName;
 
     private JSONObject personData;
     private String endpoint;
@@ -66,9 +67,10 @@ public class Notifier {
     private final RollbarThread rollbarThread;
     
 
-    public Notifier(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
+    public Notifier(Context context, String rollbarThreadName, String accessToken, String environment, boolean registerExceptionHandler) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        
+
+        this.rollbarThreadName = rollbarThreadName;
         this.accessToken = accessToken;
         this.environment = environment;
         
