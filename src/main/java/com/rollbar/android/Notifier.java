@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -397,29 +398,19 @@ public class Notifier {
     }
 
     private JSONObject buildItemPayload(Throwable throwable, String level, String description) {
-        try {
-            JSONObject body = new JSONObject();
-
-            JSONArray jsonArray = makeTrace(throwable, description);
-
-            body.put("trace_chain", jsonArray);
-
-            if (level == null) {
-                level = defaultCaughtExceptionLevel;
-            }
-
-            return buildData(level, body);
-        } catch (JSONException e) {
-            Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
-            return null;
-        }
+        return buildItemPayload(throwable, level, description, new HashMap<String, String>());
     }
 
     private JSONObject buildItemPayload(Throwable throwable, String level, String description, Map<String, String> params) {
         try {
             JSONObject body = new JSONObject();
 
-            JSONArray jsonArray = makeTrace(throwable, description);
+            List<JSONObject> traces = new ArrayList<JSONObject>();
+            do {
+                traces.add(0, createTrace(throwable, description));
+                throwable = throwable.getCause();
+            } while (throwable != null);
+            JSONArray jsonArray = new JSONArray(traces);
 
             body.put("trace_chain", jsonArray);
 
@@ -438,28 +429,8 @@ public class Notifier {
         }
     }
 
-    private JSONArray makeTrace(Throwable throwable, String description) throws JSONException {
-        List<JSONObject> traces = new ArrayList<JSONObject>();
-        do {
-            traces.add(0, createTrace(throwable, description));
-            throwable = throwable.getCause();
-        } while (throwable != null);
-        return new JSONArray(traces);
-    }
-
     private JSONObject buildItemPayload(String message, String level) {
-        try {
-            JSONObject body = new JSONObject();
-            JSONObject messageBody = new JSONObject();
-
-            messageBody.put("body", message);
-            body.put(MESSAGE, messageBody);
-
-            return buildData(level, body);
-        } catch (JSONException e) {
-            Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
-            return null;
-        }
+        return buildItemPayload(message, level, new HashMap<String, String>());
     }
 
     private JSONObject buildItemPayload(String message, String level, Map<String, String> params) {
