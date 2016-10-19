@@ -5,6 +5,7 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.util.IllegalFormatCodePointException;
 import java.util.Map;
 
 public class Rollbar {
@@ -12,12 +13,21 @@ public class Rollbar {
 
     private static Notifier notifier;
 
+    // prevent user pointless object initialization
+    private Rollbar() {
+        throw new IllegalStateException("This class has static initializer and can't be initialized using this constructor!");
+    }
+
     public static void init(Context context, String accessToken, String environment) {
         init(context, null, accessToken, environment, true);
     }
 
     public static void init(Context context, String rollbarThreadName, String accessToken, String environment) {
         init(context, rollbarThreadName, accessToken, environment, true);
+    }
+
+    public static void init(Context context, String accessToken, String environment,  boolean registerExceptionHandle) {
+        init(context, null, accessToken, environment, registerExceptionHandle);
     }
 
     public static void init(Context context, String rollbarThreadName, String accessToken, String environment, boolean registerExceptionHandler) {

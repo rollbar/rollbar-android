@@ -175,7 +175,7 @@ public class Notifier {
     private JSONObject buildData(String level, JSONObject body) throws JSONException {
         JSONObject data = new JSONObject();
 
-        data.put("environment", this.environment);
+        data.put("environment", this.environment); // do we need put null ? waste of time put cost
         data.put("level", level);
         data.put("platform", ANDROID);
         data.put("framework", ANDROID);
