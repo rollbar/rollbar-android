@@ -67,10 +67,6 @@ public class Notifier {
     private final RollbarThread rollbarThread;
     protected final String rollbarThreadName;
 
-    public Notifier(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
-        this(context,null,accessToken,environment,registerExceptionHandler);
-    }
-
     public Notifier(Context context,  String rollbarThreadName, String accessToken, String environment, boolean registerExceptionHandler) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
 

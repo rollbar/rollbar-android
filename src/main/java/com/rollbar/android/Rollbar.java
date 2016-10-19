@@ -13,14 +13,18 @@ public class Rollbar {
     private static Notifier notifier;
 
     public static void init(Context context, String accessToken, String environment) {
-        init(context, accessToken, environment, true);
+        init(context, null, accessToken, environment, true);
     }
 
-    public static void init(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
+    public static void init(Context context, String rollbarThreadName, String accessToken, String environment) {
+        init(context, rollbarThreadName, accessToken, environment, true);
+    }
+
+    public static void init(Context context, String rollbarThreadName, String accessToken, String environment, boolean registerExceptionHandler) {
         if (isInit()) {
             Log.w(TAG, "Rollbar.init() called when it was already initialized.");
         } else {
-            notifier = new Notifier(context, accessToken, environment, registerExceptionHandler);
+            notifier = new Notifier(context, rollbarThreadName, accessToken, environment, registerExceptionHandler);
         }
     }
 
