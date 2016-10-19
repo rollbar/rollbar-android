@@ -11,6 +11,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class RollbarThread extends Thread {
+
+    private final String DEFAULT_ROLLBAR_THREAD_NAME = "RollbarThread";
+
     private final List<JSONObject> queue;
     private final Notifier notifier;
     
@@ -20,6 +23,9 @@ public class RollbarThread extends Thread {
     public RollbarThread(Notifier notifier) {
         this.notifier = notifier;
         queue = new ArrayList<JSONObject>();
+        setName(notifier.rollbarThreadName !=null
+                ? notifier.rollbarThreadName
+                : DEFAULT_ROLLBAR_THREAD_NAME);
     }
 
     @Override
