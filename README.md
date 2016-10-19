@@ -1,4 +1,4 @@
-# Rollbar for Android
+# ceph3us fork of Rollbar for Android
 
 <!-- RemoveNext -->
 Java library for reporting exceptions, errors, and log messages to [Rollbar](https://rollbar.com).
@@ -12,9 +12,9 @@ Install from Maven central:
 ```
 <dependencies>
   <dependency>
-    <groupId>com.rollbar</groupId>
+    <groupId>pl.ceph3us.projects.android</groupId>
      <artifactId>rollbar</artifactId>
-     <version>0.1.3</version>
+     <version>0.1.3-bc</version>
   </dependency>
 </dependencies>
 ```
@@ -22,19 +22,19 @@ Install from Maven central:
 or
 
 ```
-compile 'com.rollbar:rollbar-android:0.1.3'
+compile 'pl.ceph3us.projects.android.rollbar:rollbar:0.1.3-bc'
 ```
 
 ### Jar
 
-Download [rollbar-android.jar](https://github.com/rollbar/rollbar-android/releases/latest) and place it in your Android project's `libs` directory.
+Download [rollbar.jar](https://github.com/c3ph3us/rollbar/releases/latest) and place it in your Android project's `libs` directory.
 
 Add the following line in your custom Application subclass's `onCreate()` to initialize Rollbar:
 
 ```java
-Rollbar.init(this, "POST_CLIENT_ITEM_ACCESS_TOKEN", "production");
+Rollbar.init(this, "MyCustomRollbarThreadName", "POST_CLIENT_ITEM_ACCESS_TOKEN", "production");
 ```
-
+if you don't want to customize rollbar thread name just omit it.
 
 Make sure your `AndroidManifest.xml` contains the `android.permission.INTERNET` permission.
 
@@ -144,7 +144,7 @@ By default, file names and line numbers are removed by ProGuard. To preserve thi
 
 ## Help / Support
 
-If you run into any issues, please email us at `support@rollbar.com`
+If you run into any problem please fill issue.
 
 ## Build
 
