@@ -5,10 +5,28 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
-import java.util.IllegalFormatCodePointException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Map;
 
+// TODO: 19.10.16
+// 1) prevent pointless thread running - we can hook in exc handler
+// 2) ad 2/ re-route user global thread exc handler if set !
+// 3) make report object to avoid to many methods
+
 public class Rollbar {
+
+    // predefined levels - later we add indef annotation
+    //@IntDef({MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS, NEPTUNE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Level {
+        String CRITICAL = "Critical";
+        String ERROR = "Error";
+        String WARNING = "Warning";
+        String INFO = "Info";
+        String DEBUG = "Debug";
+    }
+
     public static final String TAG = "Rollbar";
 
     private static Notifier notifier;
@@ -26,7 +44,7 @@ public class Rollbar {
         init(context, rollbarThreadName, accessToken, environment, true);
     }
 
-    public static void init(Context context, String accessToken, String environment,  boolean registerExceptionHandle) {
+    public static void init(Context context, String accessToken, String environment, boolean registerExceptionHandle) {
         init(context, null, accessToken, environment, registerExceptionHandle);
     }
 
@@ -42,7 +60,7 @@ public class Rollbar {
         return notifier != null;
     }
 
-    public static void reportException(final Throwable throwable, final String level, final String description) {
+    public static void reportException(final Throwable throwable, @Level final String level, final String description) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.reportException(throwable, level, description);
@@ -50,7 +68,7 @@ public class Rollbar {
         });
     }
 
-    public static void reportException(final Throwable throwable, final String level, final String description, final Map<String, String> params) {
+    public static void reportException(final Throwable throwable, @Level final String level, final String description, final Map<String, String> params) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.reportException(throwable, level, description, params);
@@ -58,7 +76,7 @@ public class Rollbar {
         });
     }
 
-    public static void reportException(final Throwable throwable, final String level) {
+    public static void reportException(final Throwable throwable, @Level final String level) {
         reportException(throwable, level, null);
     }
 
@@ -66,7 +84,7 @@ public class Rollbar {
         reportException(throwable, null, null);
     }
 
-    public static void reportMessage(final String message, final String level) {
+    public static void reportMessage(final String message, @Level final String level) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.reportMessage(message, level);
@@ -74,7 +92,7 @@ public class Rollbar {
         });
     }
 
-    public static void reportMessage(final String message, final String level, final Map<String, String> params) {
+    public static void reportMessage(final String message, @Level final String level, final Map<String, String> params) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.reportMessage(message, level, params);
@@ -83,9 +101,9 @@ public class Rollbar {
     }
 
     public static void reportMessage(String message) {
-        reportMessage(message, "info");
+        reportMessage(message, Level.INFO);
     }
-    
+
     public static void setPersonData(final JSONObject personData) {
         ensureInit(new Runnable() {
             public void run() {
@@ -93,7 +111,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setPersonData(final String id, final String username, final String email) {
         ensureInit(new Runnable() {
             public void run() {
@@ -101,7 +119,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setEndpoint(final String endpoint) {
         ensureInit(new Runnable() {
             public void run() {
@@ -109,7 +127,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setReportUncaughtExceptions(final boolean report) {
         ensureInit(new Runnable() {
             public void run() {
@@ -117,7 +135,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setIncludeLogcat(final boolean includeLogcat) {
         ensureInit(new Runnable() {
             public void run() {
@@ -125,16 +143,16 @@ public class Rollbar {
             }
         });
     }
-    
-    public static void setDefaultCaughtExceptionLevel(final String level) {
+
+    public static void setDefaultCaughtExceptionLevel(@Level final String level) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.setDefaultCaughtExceptionLevel(level);
             }
         });
     }
-    
-    public static void setUncaughtExceptionLevel(final String level) {
+
+    public static void setUncaughtExceptionLevel(@Level final String level) {
         ensureInit(new Runnable() {
             public void run() {
                 notifier.setUncaughtExceptionLevel(level);
@@ -149,7 +167,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     private static void ensureInit(Runnable runnable) {
         if (isInit()) {
             try {
