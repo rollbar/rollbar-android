@@ -32,7 +32,8 @@ import com.rollbar.android.http.HttpResponse;
 import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
-    private static final String NOTIFIER_VERSION = "0.1.3bc4";
+    // consider other solution for versioning
+    private static final String NOTIFIER_VERSION = "0.1.4";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     private static final String PAYLOAD_ERROR_MSG = "There was an error constructing the JSON payload.";
@@ -66,6 +67,10 @@ public class Notifier {
     private final File queuedItemDirectory;
     private final RollbarThread rollbarThread;
     protected final String rollbarThreadName;
+
+    public Notifier(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
+        this(context,null,accessToken,environment,registerExceptionHandler);
+    }
 
     public Notifier(Context context,  String rollbarThreadName, String accessToken, String environment, boolean registerExceptionHandler) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -175,7 +180,7 @@ public class Notifier {
     private JSONObject buildData(String level, JSONObject body) throws JSONException {
         JSONObject data = new JSONObject();
 
-        data.put("environment", this.environment); // do we need put null ? waste of time put cost
+        data.put("environment", this.environment);
         data.put("level", level);
         data.put("platform", ANDROID);
         data.put("framework", ANDROID);

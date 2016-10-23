@@ -9,10 +9,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Map;
 
-// TODO: 19.10.16
+// ceph3us TODO: 19.10.16
 // 1) prevent pointless thread running - we can hook in exc handler
-// 2) ad 2/ re-route user global thread exc handler if set !
+// 2) ad 2/ re-route user global thread exc handler if set!
 // 3) make report object to avoid to many methods
+// DONE 4) add predefined levels
+// DONE 5) concurrency locking correction
+// DONE 6) thread reporting verbosity
 
 public class Rollbar {
 
