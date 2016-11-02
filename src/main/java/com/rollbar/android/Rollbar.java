@@ -38,11 +38,12 @@ public class Rollbar {
 
     public static void reportException(final Throwable throwable, final String level, final String description, final Map<String, String> params) {
         ensureInit(new Runnable() {
-                public void run() {
+            public void run() {
                 notifier.reportException(throwable, level, description, params);
             }
         });
-    
+    }
+
     public static void reportException(final Throwable throwable, final String level) {
         reportException(throwable, level, null);
     }
@@ -70,7 +71,7 @@ public class Rollbar {
     public static void reportMessage(String message) {
         reportMessage(message, "info");
     }
-    
+
     public static void setPersonData(final JSONObject personData) {
         ensureInit(new Runnable() {
             public void run() {
@@ -78,7 +79,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setPersonData(final String id, final String username, final String email) {
         ensureInit(new Runnable() {
             public void run() {
@@ -86,7 +87,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setEndpoint(final String endpoint) {
         ensureInit(new Runnable() {
             public void run() {
@@ -94,7 +95,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setReportUncaughtExceptions(final boolean report) {
         ensureInit(new Runnable() {
             public void run() {
@@ -102,7 +103,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setIncludeLogcat(final boolean includeLogcat) {
         ensureInit(new Runnable() {
             public void run() {
@@ -110,7 +111,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setDefaultCaughtExceptionLevel(final String level) {
         ensureInit(new Runnable() {
             public void run() {
@@ -118,7 +119,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     public static void setUncaughtExceptionLevel(final String level) {
         ensureInit(new Runnable() {
             public void run() {
@@ -134,7 +135,7 @@ public class Rollbar {
             }
         });
     }
-    
+
     private static void ensureInit(Runnable runnable) {
         if (isInit()) {
             try {
