@@ -32,21 +32,21 @@ import com.rollbar.android.http.HttpResponse;
 import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
-    private static final String NOTIFIER_VERSION = "0.1.2";
+    private static final String NOTIFIER_VERSION = "0.1.3";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     private static final String PAYLOAD_ERROR_MSG = "There was an error constructing the JSON payload.";
     private static final String ANDROID = "android";
     private static final String MESSAGE = "message";
-    
-    
+
+
     private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
     private static final int MAX_LOGCAT_SIZE = 100;
-    
+
     private static int itemCounter = 0;
-    
+
     volatile private boolean handlerScheduled;
-    
+
     private final ScheduledExecutorService scheduler;
 
     private final String accessToken;
@@ -59,39 +59,39 @@ public class Notifier {
     private String defaultCaughtExceptionLevel;
     private String uncaughtExceptionLevel;
     private boolean sendOnUncaughtException;
-    
+
     private int versionCode;
     private String versionName;
-    
+
     private final File queuedItemDirectory;
     private final RollbarThread rollbarThread;
-    
+
 
     public Notifier(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        
+
         this.accessToken = accessToken;
         this.environment = environment;
-        
+
         try {
             String packageName = context.getPackageName();
             PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
-            
+
             this.versionCode = info.versionCode;
             this.versionName = info.versionName;
         } catch (NameNotFoundException e) {
             Log.e(Rollbar.TAG, "Error getting package info.");
         }
 
-        
+
         endpoint = DEFAULT_ENDPOINT;
         reportUncaughtExceptions = true;
         defaultCaughtExceptionLevel = "warning";
         uncaughtExceptionLevel = "error";
         sendOnUncaughtException = false;
-        
+
         handlerScheduled = false;
-        
+
         queuedItemDirectory = new File(context.getCacheDir(), ITEM_DIR_NAME);
         queuedItemDirectory.mkdirs();
 
@@ -101,23 +101,23 @@ public class Notifier {
 
         rollbarThread = new RollbarThread(this);
         rollbarThread.start();
-        
+
         scheduleItemFileHandler();
     }
-    
+
     private JSONArray getLogcatInfo() {
         JSONArray log = null;
-        
+
         int pid = android.os.Process.myPid();
 
         try {
             Process process = Runtime.getRuntime().exec("logcat -d");
-            
+
             InputStreamReader isr = new InputStreamReader(process.getInputStream());
             BufferedReader br = new BufferedReader(isr, 8192);
-            
+
             List<String> lines = new ArrayList<String>();
-            
+
             String line;
             while ((line = br.readLine()) != null) {
                 // Only include the line if the current process's pid is present
@@ -128,12 +128,12 @@ public class Notifier {
                     }
                 }
             }
-            
+
             log = new JSONArray(lines);
         } catch (IOException e) {
             Log.e(Rollbar.TAG, "Unable to collect logcat info.", e);
         }
-        
+
         return log;
     }
 
@@ -149,7 +149,7 @@ public class Notifier {
         JSONObject client = new JSONObject();
 
         client.put("timestamp", System.currentTimeMillis() / 1000);
-        
+
 
         JSONObject androidData = new JSONObject();
         androidData.put("phone_model", android.os.Build.MODEL);
@@ -164,7 +164,7 @@ public class Notifier {
         if (includeLogcat) {
             androidData.put("logs", getLogcatInfo());
         }
-        
+
         client.put(ANDROID, androidData);
         client.put("user_ip", "$remote_ip");
 
@@ -202,21 +202,21 @@ public class Notifier {
 
     private JSONArray loadItems(File file) {
         Log.d(Rollbar.TAG, "Loading items...");
-        
+
         JSONArray items = null;
-        
+
         try {
             FileInputStream in = new FileInputStream(file);
-            
+
             StringBuilder content = new StringBuilder();
-            
+
             byte[] buffer = new byte[1024];
             while (in.read(buffer) != -1) {
                 content.append(new String(buffer));
             }
-            
+
             in.close();
-            
+
             items = new JSONArray(content.toString());
 
             Log.d(Rollbar.TAG, "Items loaded.");
@@ -228,18 +228,18 @@ public class Notifier {
             Log.e(Rollbar.TAG, "Invalid item data. Deleting file.", e);
             file.delete();
         }
-        
+
         return items;
     }
-    
+
     public File writeItems(JSONArray items) {
         Log.d(Rollbar.TAG, "Writing items...");
-        
+
         try {
             String filename = itemCounter++ + "." + System.currentTimeMillis();
             File file = new File(queuedItemDirectory, filename);
             FileWriter writer = new FileWriter(file);
-            
+
             writer.write(items.toString());
             writer.close();
 
@@ -250,10 +250,10 @@ public class Notifier {
             return null;
         }
     }
-    
+
     public void postItems(final JSONArray items, final File file) {
         Log.i(Rollbar.TAG, "Sending item batch...");
-        
+
         JSONObject payload;
         try {
             payload = buildPayload(items);
@@ -261,19 +261,19 @@ public class Notifier {
             Log.e(Rollbar.TAG, PAYLOAD_ERROR_MSG, e);
             return;
         }
-        
+
         HttpRequestManager.getInstance().postJson(this.endpoint, payload, false,
                 new HttpResponseHandler() {
-            
+
             @Override
             public void onSuccess(HttpResponse response) {
                 Log.i(Rollbar.TAG, "Success");
-                
+
                 if (file != null) {
                     file.delete();
                 }
             }
-            
+
             @Override
             public void onFailure(HttpResponse response) {
                 Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar.");
@@ -292,26 +292,26 @@ public class Notifier {
             }
         });
     }
-    
+
     private void scheduleItemFileHandler() {
         if (!handlerScheduled) {
             handlerScheduled = true;
-            
+
             Log.d(Rollbar.TAG, "Scheheduling item file handler...");
-            
+
             scheduler.schedule(new Runnable() {
-                
+
                 @Override
                 public void run() {
                     Log.d(Rollbar.TAG, "Item file handler running...");
-                    
+
                     File[] files = queuedItemDirectory.listFiles();
-                    
+
                     for (File file : files) {
                         JSONArray items = loadItems(file);
                         postItems(items, file);
                     }
-                    
+
                     handlerScheduled = false;
                     Log.d(Rollbar.TAG, "Item file handler finished.");
                 }
@@ -360,8 +360,8 @@ public class Notifier {
 
         if (!TextUtils.isEmpty(description)) {
         	exceptionData.put("description", description);
-        }            
-        
+        }
+
         trace.put("frames", frames);
         trace.put("exception", exceptionData);
 
@@ -437,10 +437,10 @@ public class Notifier {
         try {
             JSONObject body = new JSONObject();
             JSONObject messageBody = new JSONObject();
-            
+
             messageBody.put("body", message);
             body.put(MESSAGE, messageBody);
-            
+
             for(Map.Entry<String, String> stringEntry : params.entrySet()){
                 messageBody.put(stringEntry.getKey(), stringEntry.getValue());
             }
@@ -453,7 +453,7 @@ public class Notifier {
 
     public void reportException(Throwable throwable, String level, String description) {
         JSONObject item = buildItemPayload(throwable, level, description);
-        
+
         if (item != null) {
             rollbarThread.queueItem(item);
         }
@@ -489,17 +489,17 @@ public class Notifier {
 
     public void setPersonData(String id, String username, String email) {
         JSONObject personData = new JSONObject();
-        
+
         try {
             personData.put("id", id);
-            
+
             if (username != null) {
                 personData.put("username", username);
             }
             if (email != null) {
                 personData.put("email", email);
             }
-            
+
             this.personData = personData;
         } catch (JSONException e) {
             Log.e(Rollbar.TAG, "JSON error creating person data.", e);
@@ -513,7 +513,7 @@ public class Notifier {
     public void setReportUncaughtExceptions(boolean reportUncaughtExceptions) {
         this.reportUncaughtExceptions = reportUncaughtExceptions;
     }
-    
+
     public void setIncludeLogcat(boolean includeLogcat) {
         this.includeLogcat = includeLogcat;
     }
