@@ -39,7 +39,7 @@ public class Notifier {
     private static final String ANDROID = "android";
     private static final String MESSAGE = "message";
 
-
+    // TODO(eric): let's make a configurable retry time
     private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
     private static final int MAX_LOGCAT_SIZE = 100;
 
@@ -279,13 +279,23 @@ public class Notifier {
                 Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar.");
                 Log.e(Rollbar.TAG, "Response: " + response);
 
-                if (file == null) {
-                    if (!response.hasStatusCode()) {
+                // if there's no response code or the response code is not a 2xx or 4xx
+                //    write a file if one doesn't exist already and re-schedule
+                // TODO(eric): make this conditional check one function
+                if (!response.hasStatusCode() || !(response.has2XXStatusCode() || response.has4XXStatusCode())) {
+                    Log.d(Rollbar.TAG, "Failed response: write new file or use existing");
+                    if (file == null) {
+                        Log.d(Rollbar.TAG, "Failed response: writing a new file.");
                         writeItems(items);
                     }
+
+                    Log.d(Rollbar.TAG, "Failed response: re-scheduling.");
+                    scheduleItemFileHandler(5);
+                // otherwise, delete the file if it exists
                 } else {
-                    // Give up if there is a server error
-                    if (response.hasStatusCode()) {
+                    Log.d(Rollbar.TAG, "Failed response: don't write new file and delete if it exists");
+                    if (file != null) {
+                        Log.d(Rollbar.TAG, "Failed response: deleting file.");
                         file.delete();
                     }
                 }
@@ -293,7 +303,7 @@ public class Notifier {
         });
     }
 
-    private void scheduleItemFileHandler() {
+    private void itemFileHandler(int itemScheduleDelay) {
         if (!handlerScheduled) {
             handlerScheduled = true;
 
@@ -315,8 +325,16 @@ public class Notifier {
                     handlerScheduled = false;
                     Log.d(Rollbar.TAG, "Item file handler finished.");
                 }
-            }, DEFAULT_ITEM_SCHEDULE_DELAY, TimeUnit.SECONDS);
+            }, itemScheduleDelay, TimeUnit.SECONDS);
         }
+    }
+
+    private void scheduleItemFileHandler() {
+        itemFileHandler(DEFAULT_ITEM_SCHEDULE_DELAY);
+    }
+
+    private void scheduleItemFileHandler(int itemScheduleDelay) {
+        itemFileHandler(itemScheduleDelay);
     }
 
     private JSONObject createTrace(Throwable throwable, String description) throws JSONException {

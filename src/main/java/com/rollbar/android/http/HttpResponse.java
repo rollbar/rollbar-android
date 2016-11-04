@@ -30,6 +30,14 @@ public class HttpResponse {
         return statusCode > 0;
     }
 
+    public boolean has2XXStatusCode() {
+        return statusCode / 100 == 2;
+    }
+
+    public boolean has4XXStatusCode() {
+        return statusCode / 100 == 4;
+    }
+
     @Override
     public String toString() {
         if (responseText != null) {
