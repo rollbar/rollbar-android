@@ -114,6 +114,12 @@ The following configuration methods are available:
     If you are using Rollbar Enterprise, call `setEndpoint` to route events to your Rollbar instance. (Most users will not need to do this.)
 
     Default: `"https://api.rollbar.com/api/1/items/"`
+    
+* **Rollbar.setItemScheduleDelay(int delay)**
+
+    Sets the delay between retries of sending failed items, in seconds.
+    
+    Default: `30`
 
 
 

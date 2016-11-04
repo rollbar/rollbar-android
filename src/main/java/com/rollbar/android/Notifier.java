@@ -39,8 +39,8 @@ public class Notifier {
     private static final String ANDROID = "android";
     private static final String MESSAGE = "message";
 
-    // TODO(eric): let's make a configurable retry time
-    private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
+    private static final int DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY = 1;
+    private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 30;
     private static final int MAX_LOGCAT_SIZE = 100;
 
     private static int itemCounter = 0;
@@ -59,6 +59,7 @@ public class Notifier {
     private String defaultCaughtExceptionLevel;
     private String uncaughtExceptionLevel;
     private boolean sendOnUncaughtException;
+    private int itemScheduleDelay;
 
     private int versionCode;
     private String versionName;
@@ -89,6 +90,7 @@ public class Notifier {
         defaultCaughtExceptionLevel = "warning";
         uncaughtExceptionLevel = "error";
         sendOnUncaughtException = false;
+        itemScheduleDelay = DEFAULT_ITEM_SCHEDULE_DELAY;
 
         handlerScheduled = false;
 
@@ -102,7 +104,7 @@ public class Notifier {
         rollbarThread = new RollbarThread(this);
         rollbarThread.start();
 
-        scheduleItemFileHandler();
+        scheduleItemFileHandler(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY);
     }
 
     private JSONArray getLogcatInfo() {
@@ -290,7 +292,7 @@ public class Notifier {
                     }
 
                     Log.d(Rollbar.TAG, "Failed response: re-scheduling.");
-                    scheduleItemFileHandler(5);
+                    scheduleItemFileHandler(itemScheduleDelay);
                 // otherwise, delete the file if it exists
                 } else {
                     Log.d(Rollbar.TAG, "Failed response: don't write new file and delete if it exists");
@@ -303,11 +305,11 @@ public class Notifier {
         });
     }
 
-    private void itemFileHandler(int itemScheduleDelay) {
+    private void scheduleItemFileHandler(int delay) {
         if (!handlerScheduled) {
             handlerScheduled = true;
 
-            Log.d(Rollbar.TAG, "Scheheduling item file handler...");
+            Log.d(Rollbar.TAG, "Scheduling item file handler...");
 
             scheduler.schedule(new Runnable() {
 
@@ -325,16 +327,8 @@ public class Notifier {
                     handlerScheduled = false;
                     Log.d(Rollbar.TAG, "Item file handler finished.");
                 }
-            }, itemScheduleDelay, TimeUnit.SECONDS);
+            }, delay, TimeUnit.SECONDS);
         }
-    }
-
-    private void scheduleItemFileHandler() {
-        itemFileHandler(DEFAULT_ITEM_SCHEDULE_DELAY);
-    }
-
-    private void scheduleItemFileHandler(int itemScheduleDelay) {
-        itemFileHandler(itemScheduleDelay);
     }
 
     private JSONObject createTrace(Throwable throwable, String description) throws JSONException {
@@ -546,5 +540,9 @@ public class Notifier {
 
     public void setSendOnUncaughtException(boolean sendOnUncaughtException) {
         this.sendOnUncaughtException = sendOnUncaughtException;
+    }
+
+    public void setItemScheduleDelay(int delay) {
+        this.itemScheduleDelay = delay;
     }
 }
