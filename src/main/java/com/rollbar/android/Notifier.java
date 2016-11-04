@@ -281,25 +281,18 @@ public class Notifier {
                 Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar.");
                 Log.e(Rollbar.TAG, "Response: " + response);
 
-                // if there's no response code or the response code is not a 2xx or 4xx
-                //    write a file if one doesn't exist already and re-schedule
-                // TODO(eric): make this conditional check one function
-                if (!response.hasStatusCode() || !(response.has2XXStatusCode() || response.has4XXStatusCode())) {
-                    Log.d(Rollbar.TAG, "Failed response: write new file or use existing");
+                // if the failed response has a 4xx status code, delete the file if it exsits
+                if (response.hasStatusCode() && response.has4xxStatusCode()) {
+                    if (file != null) {
+                        file.delete();
+                    }
+                // otherwise, write a file if one doesn't exist already and reschedule
+                } else {
                     if (file == null) {
-                        Log.d(Rollbar.TAG, "Failed response: writing a new file.");
                         writeItems(items);
                     }
 
-                    Log.d(Rollbar.TAG, "Failed response: re-scheduling.");
                     scheduleItemFileHandler(itemScheduleDelay);
-                // otherwise, delete the file if it exists
-                } else {
-                    Log.d(Rollbar.TAG, "Failed response: don't write new file and delete if it exists");
-                    if (file != null) {
-                        Log.d(Rollbar.TAG, "Failed response: deleting file.");
-                        file.delete();
-                    }
                 }
             }
         });
