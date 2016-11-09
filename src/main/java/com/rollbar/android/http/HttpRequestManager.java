@@ -12,7 +12,7 @@ import org.json.JSONObject;
 
 public class HttpRequestManager {
     public static final int MAX_RETRIES = 5;
-    
+
     private static HttpRequestManager instance = null;
     private final ThreadPoolExecutor executor;
     private final ScheduledExecutorService service;
@@ -28,7 +28,7 @@ public class HttpRequestManager {
         }
         return instance;
     }
-    
+
     private void postJson(String urlString, String body, boolean async, HttpResponseHandler handler) {
         URL url;
 
@@ -60,12 +60,12 @@ public class HttpRequestManager {
     public void postJson(String urlString, JSONArray json, boolean async, HttpResponseHandler handler) {
         postJson(urlString, json.toString(), async, handler);
     }
-    
+
     public void retryRequest(final HttpRequest request) {
         int retryDelay = request.getAttemptNumber();
-        
+
         service.schedule(new Runnable() {
-            
+
             @Override
             public void run() {
                 executor.execute(request);

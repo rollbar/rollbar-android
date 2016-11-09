@@ -39,8 +39,8 @@ public class Notifier {
     private static final String ANDROID = "android";
     private static final String MESSAGE = "message";
 
-
-    private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 1;
+    private static final int DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY = 1;
+    private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 30;
     private static final int MAX_LOGCAT_SIZE = 100;
 
     private static int itemCounter = 0;
@@ -59,6 +59,7 @@ public class Notifier {
     private String defaultCaughtExceptionLevel;
     private String uncaughtExceptionLevel;
     private boolean sendOnUncaughtException;
+    private int itemScheduleDelay;
 
     private int versionCode;
     private String versionName;
@@ -89,6 +90,7 @@ public class Notifier {
         defaultCaughtExceptionLevel = "warning";
         uncaughtExceptionLevel = "error";
         sendOnUncaughtException = false;
+        itemScheduleDelay = DEFAULT_ITEM_SCHEDULE_DELAY;
 
         handlerScheduled = false;
 
@@ -102,7 +104,7 @@ public class Notifier {
         rollbarThread = new RollbarThread(this);
         rollbarThread.start();
 
-        scheduleItemFileHandler();
+        scheduleItemFileHandler(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY);
     }
 
     private JSONArray getLogcatInfo() {
@@ -279,25 +281,28 @@ public class Notifier {
                 Log.e(Rollbar.TAG, "There was a problem reporting to Rollbar.");
                 Log.e(Rollbar.TAG, "Response: " + response);
 
-                if (file == null) {
-                    if (!response.hasStatusCode()) {
-                        writeItems(items);
-                    }
-                } else {
-                    // Give up if there is a server error
-                    if (response.hasStatusCode()) {
+                // if the failed response has a 4xx status code, delete the file if it exsits
+                if (response.hasStatusCode() && response.has4xxStatusCode()) {
+                    if (file != null) {
                         file.delete();
                     }
+                // otherwise, write a file if one doesn't exist already and reschedule
+                } else {
+                    if (file == null) {
+                        writeItems(items);
+                    }
+
+                    scheduleItemFileHandler(itemScheduleDelay);
                 }
             }
         });
     }
 
-    private void scheduleItemFileHandler() {
+    private void scheduleItemFileHandler(int delay) {
         if (!handlerScheduled) {
             handlerScheduled = true;
 
-            Log.d(Rollbar.TAG, "Scheheduling item file handler...");
+            Log.d(Rollbar.TAG, "Scheduling item file handler...");
 
             scheduler.schedule(new Runnable() {
 
@@ -315,7 +320,7 @@ public class Notifier {
                     handlerScheduled = false;
                     Log.d(Rollbar.TAG, "Item file handler finished.");
                 }
-            }, DEFAULT_ITEM_SCHEDULE_DELAY, TimeUnit.SECONDS);
+            }, delay, TimeUnit.SECONDS);
         }
     }
 
@@ -528,5 +533,9 @@ public class Notifier {
 
     public void setSendOnUncaughtException(boolean sendOnUncaughtException) {
         this.sendOnUncaughtException = sendOnUncaughtException;
+    }
+
+    public void setItemScheduleDelay(int delay) {
+        this.itemScheduleDelay = delay;
     }
 }

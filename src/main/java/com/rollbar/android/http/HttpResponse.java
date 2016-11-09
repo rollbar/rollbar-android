@@ -2,10 +2,10 @@ package com.rollbar.android.http;
 
 public class HttpResponse {
     private final String result;
-    
+
     private final int statusCode;
     private final String responseText;
-    
+
     public HttpResponse(String result) {
         this.result = result;
         this.statusCode = 0;
@@ -25,9 +25,13 @@ public class HttpResponse {
     public String getResponseText() {
         return responseText;
     }
-    
+
     public boolean hasStatusCode() {
         return statusCode > 0;
+    }
+
+    public boolean has4xxStatusCode() {
+        return statusCode / 100 == 4;
     }
 
     @Override
@@ -35,7 +39,7 @@ public class HttpResponse {
         if (responseText != null) {
             return responseText;
         }
-        
+
         return result;
     }
 }

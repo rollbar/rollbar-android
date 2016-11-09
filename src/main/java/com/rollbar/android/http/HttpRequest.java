@@ -27,7 +27,7 @@ public class HttpRequest implements Runnable {
 
     private String method;
     private byte[] body;
-    
+
     private int attemptNumber;
 
     public HttpRequest(URL url, String method, HttpResponseHandler handler) {
@@ -36,7 +36,7 @@ public class HttpRequest implements Runnable {
         this.handler = handler;
 
         this.requestProperties = new HashMap<String, String>();
-        
+
         attemptNumber = 1;
     }
 
@@ -86,7 +86,7 @@ public class HttpRequest implements Runnable {
 
             InputStream in = new BufferedInputStream(
                     responseCode == 200 ? connection.getInputStream() : connection.getErrorStream());
-            
+
             String responseText = getResponseText(in);
             HttpResponse response = new HttpResponse(responseCode, responseText);
 
@@ -101,18 +101,18 @@ public class HttpRequest implements Runnable {
             connection.disconnect();
         }
     }
-    
+
     private void handleFailureWithRetries(HttpResponse response) {
         if (attemptNumber < HttpRequestManager.MAX_RETRIES &&
                 !response.hasStatusCode()) {
             attemptNumber++;
-            
+
             HttpRequestManager.getInstance().retryRequest(this);
         } else {
             handler.onFailure(response);
         }
     }
-    
+
     public int getAttemptNumber() {
         return attemptNumber;
     }

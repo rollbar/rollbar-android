@@ -136,6 +136,14 @@ public class Rollbar {
         });
     }
 
+    public static void setItemScheduleDelay(final int delay) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setItemScheduleDelay(delay);
+            }
+        });
+    }
+
     private static void ensureInit(Runnable runnable) {
         if (isInit()) {
             try {

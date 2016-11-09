@@ -13,10 +13,10 @@ import org.json.JSONObject;
 public class RollbarThread extends Thread {
     private final List<JSONObject> queue;
     private final Notifier notifier;
-    
+
     private final Lock lock = new ReentrantLock();
     private final Condition ready = lock.newCondition();
-    
+
     public RollbarThread(Notifier notifier) {
         this.notifier = notifier;
         queue = new ArrayList<JSONObject>();
@@ -26,7 +26,7 @@ public class RollbarThread extends Thread {
     public void run() {
         for (;;) {
             lock.lock();
-            
+
             try {
                 if (queue.isEmpty()) {
                     ready.await();
@@ -54,7 +54,7 @@ public class RollbarThread extends Thread {
 
         Log.d(Rollbar.TAG, "Rollbar thread finishing.");
     }
-    
+
     public void queueItem(JSONObject item) {
         lock.lock();
         queue.add(item);
