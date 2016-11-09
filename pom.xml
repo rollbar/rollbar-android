@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.rollbar</groupId>
   <artifactId>rollbar-android</artifactId>
-  <version>0.1.3</version>
+  <version>0.2.0</version>
   <name>rollbar-android</name>
   <description>Rollbar for Android</description>
   <url>https://rollbar.com/docs/notifier/rollbar-android</url>

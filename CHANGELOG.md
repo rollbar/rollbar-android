@@ -1,5 +1,10 @@
 # Change Log
 
+**0.2.0**
+
+- Improved resiliency against bad network conditions. See [#31](https://github.com/rollbar/rollbar-android/pull/31)
+    - Items that fail to send will now be retried periodically. Developers will no longer need to wait until a user restarts the app.
+
 **0.1.3**
 - Add pom.xml with metadata for Maven Central
 

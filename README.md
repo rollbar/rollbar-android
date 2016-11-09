@@ -14,7 +14,7 @@ Install from Maven central:
   <dependency>
     <groupId>com.rollbar</groupId>
      <artifactId>rollbar</artifactId>
-     <version>0.1.3</version>
+     <version>0.2.0</version>
   </dependency>
 </dependencies>
 ```
@@ -22,7 +22,7 @@ Install from Maven central:
 or
 
 ```
-compile 'com.rollbar:rollbar-android:0.1.3'
+compile 'com.rollbar:rollbar-android:0.2.0'
 ```
 
 ### Jar
@@ -66,39 +66,39 @@ Rollbar.reportMessage("A test message", "debug"); // default level is "info"
 The following configuration methods are available:
 
  * **Rollbar.setPersonData(String id, String username, String email)**
-    
+
     Sets the properties of the current user (called a "person" in Rollbar parlance) to be sent along with every report.
-    
+
     Default: all `null`
 
 
  * **Rollbar.setReportUncaughtExceptions(boolean report)**
 
     Sets whether or not to report uncaught exceptions to Rollbar.
-    
+
     Default: `true`
 
 
  * **Rollbar.setIncludeLogcat(boolean includeLogcat)**
 
     Sets whether or not to include logcat output in reports to Rollbar.
-    
+
     Note: For devices with API level 15 and lower, you will need to include the `android.permission.READ_LOGS` permission in your app's `AndroidManifest.xml` for logcat collection to work.
-    
+
     Default: `false`
 
 
  * **Rollbar.setDefaultCaughtExceptionLevel(String level)**
 
     Sets the level caught exceptions are reported as by default.
-    
+
     Default: `"warning"`
 
 
  * **Rollbar.setUncaughtExceptionLevel(String level)**
 
     Sets the level uncaught exceptions are reported as.
-    
+
     Default: `"error"`
 
 
@@ -114,11 +114,11 @@ The following configuration methods are available:
     If you are using Rollbar Enterprise, call `setEndpoint` to route events to your Rollbar instance. (Most users will not need to do this.)
 
     Default: `"https://api.rollbar.com/api/1/items/"`
-    
+
 * **Rollbar.setItemScheduleDelay(int delay)**
 
     Sets the delay between retries of sending failed items, in seconds.
-    
+
     Default: `30`
 
 
