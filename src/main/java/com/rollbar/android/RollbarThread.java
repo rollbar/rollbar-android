@@ -24,41 +24,38 @@ public class RollbarThread extends Thread {
 
     @Override
     public void run() {
-        for (;;) {
+        while (!interrupted()) {
             lock.lock();
-
             try {
-                if (queue.isEmpty()) {
+                while (queue.isEmpty()) {
                     ready.await();
                 }
-
                 JSONArray items = new JSONArray(queue);
                 queue.clear();
-
                 lock.unlock();
-
                 notifier.postItems(items, null);
             } catch (InterruptedException e) {
                 if (!queue.isEmpty()) {
                     JSONArray items = new JSONArray(queue);
                     queue.clear();
-
-                    // Save all remaining items to disk because the process is
-                    // dying soon
+                    lock.unlock();
                     notifier.writeItems(items);
+                } else {
+                    lock.unlock();
                 }
-
-                break;
+                interrupt();
             }
         }
-
         Log.d(Rollbar.TAG, "Rollbar thread finishing.");
     }
 
     public void queueItem(JSONObject item) {
         lock.lock();
-        queue.add(item);
-        ready.signal();
-        lock.unlock();
+        try {
+            queue.add(item);
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 }
