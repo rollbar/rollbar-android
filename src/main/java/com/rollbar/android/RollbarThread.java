@@ -39,6 +39,8 @@ public class RollbarThread extends Thread {
                     JSONArray items = new JSONArray(queue);
                     queue.clear();
                     lock.unlock();
+                    // Save all remaining items to disk because the process is
+                    // dying soon
                     notifier.writeItems(items);
                 } else {
                     lock.unlock();
