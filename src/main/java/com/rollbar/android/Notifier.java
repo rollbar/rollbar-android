@@ -152,6 +152,15 @@ public class Notifier {
 
         client.put("timestamp", System.currentTimeMillis() / 1000);
 
+        // Put version code and name at top level of returned JSON so that it can be referenced
+        // in the "advanced search" text field on the /items page at rollbar.com. Properties referenced
+        // in this field must be at the top level of the returned JSON.
+        client.put("code_version", this.versionCode);
+        client.put("name_version", this.versionName);
+
+        // Put version code and name under alternative names, in case user accidentally reverses them.
+        client.put("version_code", this.versionCode);
+        client.put("version_name", this.versionName);
 
         JSONObject androidData = new JSONObject();
         androidData.put("phone_model", android.os.Build.MODEL);
