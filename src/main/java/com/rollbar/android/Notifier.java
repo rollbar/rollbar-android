@@ -32,7 +32,7 @@ import com.rollbar.android.http.HttpResponse;
 import com.rollbar.android.http.HttpResponseHandler;
 
 public class Notifier {
-    private static final String NOTIFIER_VERSION = "0.2.0";
+    private static final String NOTIFIER_VERSION = "0.2.1";
     private static final String DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/items/";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     private static final String PAYLOAD_ERROR_MSG = "There was an error constructing the JSON payload.";

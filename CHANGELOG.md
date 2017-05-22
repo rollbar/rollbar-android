@@ -1,5 +1,12 @@
 # Change Log
 
+**0.2.1**
+
+- Add `code_version` and `version_name` to the top level JSON of the item. See
+  [#33](https://github.com/rollbar/rollbar-android/pull/33).
+- Fix some issues with the custom thread class to address potential deadlocks. See
+  [#32](https://github.com/rollbar/rollbar-android/pull/32).
+
 **0.2.0**
 
 - Improved resiliency against bad network conditions. See [#31](https://github.com/rollbar/rollbar-android/pull/31)
