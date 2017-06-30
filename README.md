@@ -13,7 +13,7 @@ Install from Maven central:
 <dependencies>
   <dependency>
     <groupId>com.rollbar</groupId>
-     <artifactId>rollbar</artifactId>
+     <artifactId>rollbar-android</artifactId>
      <version>0.2.1</version>
   </dependency>
 </dependencies>
