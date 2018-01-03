@@ -3,6 +3,11 @@
 <!-- RemoveNext -->
 Java library for reporting exceptions, errors, and log messages to [Rollbar](https://rollbar.com).
 
+## Deprecated
+
+The library in this repo has been deprecated in favor of the universal library
+[here](https://github.com/rollbar/rollbar-java).
+
 ## Setup ##
 
 ### Maven
