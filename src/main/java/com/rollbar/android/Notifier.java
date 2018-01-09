@@ -50,7 +50,7 @@ public class Notifier {
     private final ScheduledExecutorService scheduler;
 
     private final String accessToken;
-    private final String environment;
+    private String environment;
 
     private JSONObject personData;
     private String endpoint;
@@ -546,5 +546,9 @@ public class Notifier {
 
     public void setItemScheduleDelay(int delay) {
         this.itemScheduleDelay = delay;
+    }
+
+    public void setEnvironment(final String environment) {
+        this.environment = environment;
     }
 }

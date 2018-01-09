@@ -144,6 +144,14 @@ public class Rollbar {
         });
     }
 
+    public static void setEnvironment(final String environment) {
+        ensureInit(new Runnable() {
+            public void run() {
+                notifier.setEnvironment(environment);
+            }
+        });
+    }
+
     private static void ensureInit(Runnable runnable) {
         if (isInit()) {
             try {
